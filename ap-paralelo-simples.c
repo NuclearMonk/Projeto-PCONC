@@ -9,6 +9,8 @@
  * Author: MAnuel Soares, Eduardo Faustino
  *****************************************************************************/
 #pragma region INCLUDES
+#include <gd.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -23,6 +25,8 @@
 #define DIR_CREATION_FAIL 3
 #define ALLOCATTIONION_FAIL 4
 #define NO_FILES_FOUND 5
+#define FILE_READ_FAIL 6
+#define FILE_WRITE_FAIL 7
 #pragma endregion
 
 #define RESIZE_DIR "./Resize/"
@@ -35,7 +39,7 @@
  * 
  * @param error_id Error codes defined in by macro at the top of this file
  */
-void help(int error_id)
+void help(int error_id, char *extra_info)
 {
     switch (error_id)
     {
@@ -54,6 +58,12 @@ void help(int error_id)
     case NO_FILES_FOUND:
         fprintf(stderr, "No Files Found In Target Directory");
         exit(EXIT_FAILURE);
+    case FILE_READ_FAIL:
+        fprintf(stderr, "%s : Failed to read file", extra_info);
+        break;
+    case FILE_WRITE_FAIL:
+        fprintf(stderr, "%s : Failed to write file", extra_info);
+        break;
     default:
         fprintf(stderr, "Unkown Error");
         exit(EXIT_FAILURE);
@@ -101,7 +111,7 @@ int list_pngs(char *path, char ***filenames)
     DIR *dir = opendir(path);
     if (NULL == dir)
     {
-        help(DIR_NOT_FOUND);
+        help(DIR_NOT_FOUND, NULL);
     }
     while ((de = readdir(dir)) != NULL)
     {
@@ -116,7 +126,7 @@ int list_pngs(char *path, char ***filenames)
     (*filenames) = (char **)malloc(filecount * sizeof(char *));
     if (NULL == (*filenames))
     {
-        help(ALLOCATTIONION_FAIL);
+        help(ALLOCATTIONION_FAIL, NULL);
     }
     while ((de = readdir(dir)) != NULL)
     {
@@ -125,7 +135,7 @@ int list_pngs(char *path, char ***filenames)
             (*filenames)[aux] = (char *)malloc((strlen(de->d_name) + 1) * sizeof(char));
             if (NULL == (*filenames)[aux])
             {
-                help(ALLOCATTIONION_FAIL);
+                help(ALLOCATTIONION_FAIL, NULL);
             }
             strcpy((*filenames)[aux], de->d_name);
             aux++;
@@ -185,13 +195,96 @@ image_set *create_image_set(char **array, unsigned int array_lenght, unsigned in
     image_set *thread_args = (image_set *)malloc(sizeof(image_set));
     if (NULL == thread_args)
     {
-        help(ALLOCATTIONION_FAIL);
+        help(ALLOCATTIONION_FAIL, NULL);
     }
     thread_args->array = array;
     thread_args->array_lenght = array_lenght;
     thread_args->start_index = start_index;
     thread_args->thread_count = thread_count;
     return thread_args;
+}
+
+/**
+ * @brief Resizes an image
+ * 
+ * @param in_img a pointer to a gdImage to be resized
+ * @param new_width the new width to change the image
+ * @return gdImagePtr the new image, NULL if the scaling failed
+ */
+gdImagePtr resize_image(gdImagePtr in_img, int new_width)
+{
+
+    gdImagePtr out_img;
+    int width, heigth, new_heigth;
+
+    width = in_img->sx;
+    heigth = in_img->sy;
+    new_heigth = (int)new_width * 1.0 / width * heigth;
+
+    gdImageSetInterpolationMethod(in_img, GD_BILINEAR_FIXED);
+    out_img = gdImageScale(in_img, new_width, new_heigth);
+    if (NULL == out_img)
+    {
+        return NULL;
+    }
+
+    return (out_img);
+}
+
+
+/**
+ * @brief reads a png file to a gdImage
+ * 
+ * @param file_name the name of the file to open
+ * @return gdImagePtr pointer to the created image
+ */
+gdImagePtr read_png_file(char *file_name)
+{
+
+    FILE *fp;
+    gdImagePtr read_img;
+
+    fp = fopen(file_name, "rb");
+
+    if (!fp)
+    {
+        help(FILE_READ_FAIL, file_name);
+        return NULL;
+    }
+
+    read_img = gdImageCreateFromPng(fp);
+
+    fclose(fp);
+
+    if (read_img == NULL)
+    {
+        help(FILE_READ_FAIL, file_name);
+        return NULL;
+    }
+    return read_img;
+}
+
+
+/**
+ * @brief Saves an image o the specified directory and file
+ * 
+ * @param image the gdImage to save
+ * @param directory the path to the destination directory
+ * @param filename the final filename
+ */
+void save_image(gdImagePtr image, char *directory, char *filename)
+{
+    const int filename_len = strlen(directory) + strlen(filename) + 1;
+    char *out_filename = (char *)malloc(filename_len * sizeof(char));
+    sprintf(out_filename,"%s%s", directory,filename);
+    FILE *fp = fopen(out_filename, "w");
+    if (!fp)
+    {
+        help(FILE_WRITE_FAIL, out_filename);
+        return;
+    }
+    gdImagePng(image,fp);
+    fclose(fp);
 }
 
 /**
@@ -206,12 +299,24 @@ image_set *create_image_set(char **array, unsigned int array_lenght, unsigned in
  */
 void *process_image_set(void *args)
 {
+    gdImagePtr image, out_image = NULL;
     image_set *set = (image_set *)args;
     for (unsigned int i = set->start_index; i < set->array_lenght; i += set->thread_count)
     {
-        /*TODO Implement Image Transforming Function Calls*/
-        printf("%s\n", set->array[i]);
+        printf("%s\n",set->array[i]);
+        image = read_png_file(set->array[i]);
+        if (NULL == image)
+        {
+            continue;
+        }
+        out_image = resize_image(image, 640);
+        if(NULL != out_image){
+            save_image(out_image, RESIZE_DIR, set->array[i]);
+            gdImageDestroy(out_image);
+        }
+        gdImageDestroy(image);
     }
+    
     free(args);
     return NULL;
 }
@@ -223,29 +328,29 @@ int main(int argc, char *argv[])
     int max_threads = 0;
 
     if (argc != 3)
-        help(INVALID_ARGS);
+        help(INVALID_ARGS, NULL);
 
     max_threads = atoi(argv[2]);
     input_files_count = list_pngs(argv[1], &input_files_names);
     if (input_files_count == 0)
     {
-        help(NO_FILES_FOUND);
+        help(NO_FILES_FOUND, NULL);
     }
     if (!create_directory(RESIZE_DIR))
     {
-        help(DIR_CREATION_FAIL);
+        help(DIR_CREATION_FAIL, NULL);
     }
     if (!create_directory(WATER_DIR))
     {
-        help(DIR_CREATION_FAIL);
+        help(DIR_CREATION_FAIL, NULL);
     }
     if (!create_directory(THUMB_DIR))
     {
-        help(DIR_CREATION_FAIL);
+        help(DIR_CREATION_FAIL, NULL);
     }
     pthread_t *threads = (pthread_t *)malloc(max_threads * sizeof(pthread_t));
     if (NULL == threads)
-        help(ALLOCATTIONION_FAIL);
+        help(ALLOCATTIONION_FAIL, NULL);
 
     for (int i = 0; i < max_threads; i++)
     {

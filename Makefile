@@ -3,7 +3,7 @@ flags = -g -o
 libs = -pthread -lgd
 
 
-
+all: ap-paralelo-simples serial-simples serial-complexo
 
 ap-paralelo-simples: clean
 	${CC} ap-paralelo-simples.c ${flags} ap-paralelo-simples ${libs}
@@ -15,7 +15,7 @@ serial-simples: serial-simples.c
 serial-complexo: serial-complexo.c
 	${CC} serial-complexo.c ${flags} serial-complexo ${libs}
 
-all: ap-paralelo-simples serial-simples serial-complexo
+
 
 .PHONY : clean
 clean:

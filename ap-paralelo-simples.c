@@ -20,7 +20,14 @@
 #pragma region ERROR CODES
 #define INVALID_ARGS 1
 #define DIR_NOT_FOUND 2
+#define DIR_CREATION_FAIL 3
+#define ALLOCATTIONION_FAIL 4
+#define NO_FILES_FOUND 5
 #pragma endregion
+
+#define RESIZE_DIR "./Resize/"
+#define THUMB_DIR "./Thumbnail/"
+#define WATER_DIR "./Watermark/"
 
 /**
  * @brief Throws an error and exits the program
@@ -37,6 +44,15 @@ void help(int error_id)
         exit(EXIT_FAILURE);
     case DIR_NOT_FOUND:
         fprintf(stderr, "Target Directory Not Found");
+        exit(EXIT_FAILURE);
+    case DIR_CREATION_FAIL:
+        fprintf(stderr, "Final Directory Creations Failed");
+        exit(EXIT_FAILURE);
+    case ALLOCATTIONION_FAIL:
+        fprintf(stderr, "Memory Allocation Failed");
+        exit(EXIT_FAILURE);
+    case NO_FILES_FOUND:
+        fprintf(stderr, "No Files Found In Target Directory");
         exit(EXIT_FAILURE);
     default:
         fprintf(stderr, "Unkown Error");
@@ -55,12 +71,18 @@ void help(int error_id)
 bool check_file_ext(char *filename, char *extention)
 {
     const char *ext_dot = strrchr(filename, '.');
-    if (ext_dot == NULL)
+    if (NULL == ext_dot)
+    {
         return false;
+    }
     if (ext_dot == filename)
+    {
         return false;
+    }
     if (strcasecmp(ext_dot, extention) == 0)
+    {
         return true;
+    }
     return false;
 }
 
@@ -77,30 +99,64 @@ int list_pngs(char *path, char ***filenames)
     unsigned int aux = 0;
     struct dirent *de;
     DIR *dir = opendir(path);
-    if (dir == NULL)
+    if (NULL == dir)
     {
         help(DIR_NOT_FOUND);
     }
     while ((de = readdir(dir)) != NULL)
     {
         if (check_file_ext(de->d_name, ".png"))
+        {
             filecount++;
+        }
     }
     if (filecount == 0)
         return 0;
     rewinddir(dir);
     (*filenames) = (char **)malloc(filecount * sizeof(char *));
+    if (NULL == (*filenames))
+    {
+        help(ALLOCATTIONION_FAIL);
+    }
     while ((de = readdir(dir)) != NULL)
     {
         if (check_file_ext(de->d_name, ".png"))
         {
             (*filenames)[aux] = (char *)malloc((strlen(de->d_name) + 1) * sizeof(char));
+            if (NULL == (*filenames)[aux])
+            {
+                help(ALLOCATTIONION_FAIL);
+            }
             strcpy((*filenames)[aux], de->d_name);
             aux++;
         }
     }
     closedir(dir);
     return filecount;
+}
+
+/**
+ * @brief Checks if a given directory exists, if it doesn't it creates it
+ * 
+ * @param path string with the target directory path
+ * @return true if the directory exists 
+ * @return false if the creation of the directory failed
+ */
+bool create_directory(char *path)
+{
+    DIR *dir = opendir(path);
+    if (NULL == dir)
+    {
+        if (mkdir(path, 0777) != 0)
+        {
+            return false;
+        }
+    }
+    else
+    {
+        closedir(dir);
+    }
+    return true;
 }
 
 /**
@@ -127,6 +183,10 @@ typedef struct ImageSet
 image_set *create_image_set(char **array, unsigned int array_lenght, unsigned int start_index, unsigned int thread_count)
 {
     image_set *thread_args = (image_set *)malloc(sizeof(image_set));
+    if (NULL == thread_args)
+    {
+        help(ALLOCATTIONION_FAIL);
+    }
     thread_args->array = array;
     thread_args->array_lenght = array_lenght;
     thread_args->start_index = start_index;
@@ -150,7 +210,7 @@ void *process_image_set(void *args)
     for (unsigned int i = set->start_index; i < set->array_lenght; i += set->thread_count)
     {
         /*TODO Implement Image Transforming Function Calls*/
-        printf("%u %s\n", set->start_index, set->array[i]);
+        printf("%s\n", set->array[i]);
     }
     free(args);
     return NULL;
@@ -167,7 +227,25 @@ int main(int argc, char *argv[])
 
     max_threads = atoi(argv[2]);
     input_files_count = list_pngs(argv[1], &input_files_names);
+    if (input_files_count == 0)
+    {
+        help(NO_FILES_FOUND);
+    }
+    if (!create_directory(RESIZE_DIR))
+    {
+        help(DIR_CREATION_FAIL);
+    }
+    if (!create_directory(WATER_DIR))
+    {
+        help(DIR_CREATION_FAIL);
+    }
+    if (!create_directory(THUMB_DIR))
+    {
+        help(DIR_CREATION_FAIL);
+    }
     pthread_t *threads = (pthread_t *)malloc(max_threads * sizeof(pthread_t));
+    if (NULL == threads)
+        help(ALLOCATTIONION_FAIL);
 
     for (int i = 0; i < max_threads; i++)
     {

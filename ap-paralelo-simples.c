@@ -304,23 +304,30 @@ gdImagePtr thumb_image(gdImagePtr in_img, int size)
     return out_img;
 }
 
+
+static inline char * file_path(char* path, char* subdirectory, char* filename){
+    int filename_len = strlen(path)+1+strlen(subdirectory) +strlen(filename) + 1;
+    char *file_path = (char *)malloc(filename_len * sizeof(char));
+    sprintf(file_path, "%s/%s%s",path,subdirectory, filename);
+    return file_path;
+}
 /**
  * @brief reads a png file to a gdImage
  * 
  * @param file_name the name of the file to open
  * @return gdImagePtr pointer to the created image
  */
-gdImagePtr read_png_file(char *file_name)
+gdImagePtr read_png_file(char* path,char *file_name)
 {
 
     FILE *fp;
     gdImagePtr read_img;
-
-    fp = fopen(file_name, "rb");
+    char * file = file_path(path,"",file_name);
+    fp = fopen(file, "rb");
 
     if (!fp)
     {
-        help(FILE_READ_FAIL, file_name);
+        help(FILE_READ_FAIL, file);
         return NULL;
     }
 
@@ -330,9 +337,10 @@ gdImagePtr read_png_file(char *file_name)
 
     if (read_img == NULL)
     {
-        help(FILE_READ_FAIL, file_name);
+        help(FILE_READ_FAIL, file);
         return NULL;
     }
+    free(file);
     return read_img;
 }
 
@@ -345,9 +353,7 @@ gdImagePtr read_png_file(char *file_name)
  */
 void save_image(gdImagePtr image,char *path, char *subdirectory, char *filename)
 {
-    int filename_len = strlen(path)+1+strlen(subdirectory) +strlen(filename) + 1;
-    char *out_file = (char *)malloc(filename_len * sizeof(char));
-    sprintf(out_file, "%s/%s%s",path,subdirectory, filename);
+    char* out_file = file_path(path,subdirectory,filename);
     FILE *fp = fopen(out_file, "w");
     if (!fp)
     {
@@ -376,7 +382,7 @@ void *process_image_set(void *args)
     for (unsigned int i = set->start_index; i < set->array_lenght; i += set->thread_count)
     {
         printf("%s\n", set->array[i]);
-        image = read_png_file(set->array[i]);
+        image = read_png_file(set->path,set->array[i]);
         if (NULL == image)
         {
             continue;
@@ -407,6 +413,7 @@ int main(int argc, char *argv[])
     int max_threads = 0;
     char * path = (char*)malloc((strlen(argv[1])+1)*sizeof(char));
     strcpy(path,argv[1]);
+    printf("%s\n",path);
     if (argc != 3)
         help(INVALID_ARGS, NULL);
     max_threads = atoi(argv[2]);

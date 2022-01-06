@@ -230,7 +230,52 @@ gdImagePtr resize_image(gdImagePtr in_img, int new_width)
 
     return (out_img);
 }
+gdImagePtr thumb_image(gdImagePtr in_img, int size)
+{
 
+    gdImagePtr out_img, aux_img;
+
+    int width, heigth;
+    int new_heigth, new_width;
+    // Get the image's width and height
+
+    width = in_img->sx;
+    heigth = in_img->sy;
+
+    if (heigth > width)
+    {
+        new_width = size;
+        new_heigth = (int)new_width * 1.0 / width * heigth;
+    }
+    else
+    {
+        new_heigth = size;
+        new_width = (int)new_heigth * 1.0 / heigth * width;
+    }
+
+    gdImageSetInterpolationMethod(in_img, GD_BILINEAR_FIXED);
+    aux_img = gdImageScale(in_img, new_width, new_heigth);
+    if (NULL == aux_img)
+    {
+        return NULL;
+    }
+
+    gdRect crop_area;
+    crop_area.height = size;
+    crop_area.width = size;
+    crop_area.x = 0;
+    crop_area.y = 0;
+
+    out_img = gdImageCrop(aux_img, &crop_area);
+    gdImageDestroy(aux_img);
+
+    if (!out_img)
+    {
+        return NULL;
+    }
+
+    return out_img;
+}
 
 /**
  * @brief reads a png file to a gdImage
@@ -264,7 +309,6 @@ gdImagePtr read_png_file(char *file_name)
     return read_img;
 }
 
-
 /**
  * @brief Saves an image o the specified directory and file
  * 
@@ -276,14 +320,14 @@ void save_image(gdImagePtr image, char *directory, char *filename)
 {
     const int filename_len = strlen(directory) + strlen(filename) + 1;
     char *out_filename = (char *)malloc(filename_len * sizeof(char));
-    sprintf(out_filename,"%s%s", directory,filename);
+    sprintf(out_filename, "%s%s", directory, filename);
     FILE *fp = fopen(out_filename, "w");
     if (!fp)
     {
         help(FILE_WRITE_FAIL, out_filename);
         return;
     }
-    gdImagePng(image,fp);
+    gdImagePng(image, fp);
     fclose(fp);
 }
 
@@ -303,20 +347,27 @@ void *process_image_set(void *args)
     image_set *set = (image_set *)args;
     for (unsigned int i = set->start_index; i < set->array_lenght; i += set->thread_count)
     {
-        printf("%s\n",set->array[i]);
+        printf("%s\n", set->array[i]);
         image = read_png_file(set->array[i]);
         if (NULL == image)
         {
             continue;
         }
         out_image = resize_image(image, 640);
-        if(NULL != out_image){
+        if (NULL != out_image)
+        {
             save_image(out_image, RESIZE_DIR, set->array[i]);
+            gdImageDestroy(out_image);
+        }
+        out_image = thumb_image(image, 640);
+        if (NULL != out_image)
+        {
+            save_image(out_image, THUMB_DIR, set->array[i]);
             gdImageDestroy(out_image);
         }
         gdImageDestroy(image);
     }
-    
+
     free(args);
     return NULL;
 }

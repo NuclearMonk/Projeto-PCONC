@@ -29,9 +29,9 @@
 #define FILE_WRITE_FAIL 7
 #pragma endregion
 
-#define RESIZE_DIR "./Resize/"
-#define THUMB_DIR "./Thumbnail/"
-#define WATER_DIR "./Watermark/"
+#define RESIZE_DIR "Resize/"
+#define THUMB_DIR "Thumbnail/"
+#define WATER_DIR "Watermark/"
 
 /**
  * @brief Throws an error and exits the program
@@ -47,25 +47,25 @@ void help(int error_id, char *extra_info)
         fprintf(stderr, "Invalid Arguments\nProper Argument usage is\n./ap-paralelo-simples TARGER_DIRECTORY MAX_THREADS\n");
         exit(EXIT_FAILURE);
     case DIR_NOT_FOUND:
-        fprintf(stderr, "Target Directory Not Found");
+        fprintf(stderr, "Target Directory Not Found\n");
         exit(EXIT_FAILURE);
     case DIR_CREATION_FAIL:
-        fprintf(stderr, "Final Directory Creations Failed");
+        fprintf(stderr, "Final Directory Creations Failed\n");
         exit(EXIT_FAILURE);
     case ALLOCATTIONION_FAIL:
-        fprintf(stderr, "Memory Allocation Failed");
+        fprintf(stderr, "Memory Allocation Failed\n");
         exit(EXIT_FAILURE);
     case NO_FILES_FOUND:
-        fprintf(stderr, "No Files Found In Target Directory");
+        fprintf(stderr, "No Files Found In Target Directory\n");
         exit(EXIT_FAILURE);
     case FILE_READ_FAIL:
-        fprintf(stderr, "%s : Failed to read file", extra_info);
+        fprintf(stderr, "%s : Failed to read file\n", extra_info);
         break;
     case FILE_WRITE_FAIL:
-        fprintf(stderr, "%s : Failed to write file", extra_info);
+        fprintf(stderr, "%s : Failed to write file\n", extra_info);
         break;
     default:
-        fprintf(stderr, "Unkown Error");
+        fprintf(stderr, "Unkown Error\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -137,7 +137,7 @@ int list_pngs(char *path, char ***filenames)
             {
                 help(ALLOCATTIONION_FAIL, NULL);
             }
-            strcpy((*filenames)[aux], de->d_name);
+            strcpy((*filenames)[aux],de->d_name);
             aux++;
         }
     }
@@ -169,12 +169,38 @@ bool create_directory(char *path)
     return true;
 }
 
+void create_output_directories(char *path)
+{
+    char *resize_result_path = (char *)malloc((strlen(path) + 1 + (strlen(RESIZE_DIR) + 1)) * sizeof(char));
+    char *thumb_result_path = (char *)malloc((strlen(path) + 1 + (strlen(THUMB_DIR) + 1)) * sizeof(char));
+    char *water_result_path = (char *)malloc((strlen(path) + 1 + (strlen(WATER_DIR) + 1)) * sizeof(char));
+    sprintf(resize_result_path, "%s/%s", path, RESIZE_DIR);
+    sprintf(thumb_result_path, "%s/%s", path, THUMB_DIR);
+    sprintf(water_result_path, "%s/%s", path, WATER_DIR);
+    if (!create_directory(resize_result_path))
+    {
+        help(DIR_CREATION_FAIL, NULL);
+    }
+    if (!create_directory(thumb_result_path))
+    {
+        help(DIR_CREATION_FAIL, NULL);
+    }
+    if (!create_directory(water_result_path))
+    {
+        help(DIR_CREATION_FAIL, NULL);
+    }
+    free(resize_result_path);
+    free(thumb_result_path);
+    free(water_result_path);
+}
+
 /**
  * @brief struct de image set para passar todos os dados necessarios para cada thread poder processar um conjunto de imagens
  * 
  */
 typedef struct ImageSet
 {
+    char* path;
     char **array;
     unsigned int array_lenght;
     unsigned int start_index;
@@ -190,13 +216,14 @@ typedef struct ImageSet
  * @param thread_count the threeadcount being used
  * @return image_set* 
  */
-image_set *create_image_set(char **array, unsigned int array_lenght, unsigned int start_index, unsigned int thread_count)
+image_set *create_image_set(char *path, char **array, unsigned int array_lenght, unsigned int start_index, unsigned int thread_count)
 {
     image_set *thread_args = (image_set *)malloc(sizeof(image_set));
     if (NULL == thread_args)
     {
         help(ALLOCATTIONION_FAIL, NULL);
     }
+    thread_args->path = path;
     thread_args->array = array;
     thread_args->array_lenght = array_lenght;
     thread_args->start_index = start_index;
@@ -316,18 +343,19 @@ gdImagePtr read_png_file(char *file_name)
  * @param directory the path to the destination directory
  * @param filename the final filename
  */
-void save_image(gdImagePtr image, char *directory, char *filename)
+void save_image(gdImagePtr image,char *path, char *subdirectory, char *filename)
 {
-    const int filename_len = strlen(directory) + strlen(filename) + 1;
-    char *out_filename = (char *)malloc(filename_len * sizeof(char));
-    sprintf(out_filename, "%s%s", directory, filename);
-    FILE *fp = fopen(out_filename, "w");
+    int filename_len = strlen(path)+1+strlen(subdirectory) +strlen(filename) + 1;
+    char *out_file = (char *)malloc(filename_len * sizeof(char));
+    sprintf(out_file, "%s/%s%s",path,subdirectory, filename);
+    FILE *fp = fopen(out_file, "w");
     if (!fp)
     {
-        help(FILE_WRITE_FAIL, out_filename);
+        help(FILE_WRITE_FAIL, out_file);
         return;
     }
     gdImagePng(image, fp);
+    free(out_file);
     fclose(fp);
 }
 
@@ -356,13 +384,13 @@ void *process_image_set(void *args)
         out_image = resize_image(image, 640);
         if (NULL != out_image)
         {
-            save_image(out_image, RESIZE_DIR, set->array[i]);
+            save_image(out_image,set->path, RESIZE_DIR, set->array[i]);
             gdImageDestroy(out_image);
         }
         out_image = thumb_image(image, 640);
         if (NULL != out_image)
         {
-            save_image(out_image, THUMB_DIR, set->array[i]);
+            save_image(out_image,set->path, THUMB_DIR, set->array[i]);
             gdImageDestroy(out_image);
         }
         gdImageDestroy(image);
@@ -377,35 +405,24 @@ int main(int argc, char *argv[])
     unsigned int input_files_count = 0;
     char **input_files_names = NULL;
     int max_threads = 0;
-
+    char * path = (char*)malloc((strlen(argv[1])+1)*sizeof(char));
+    strcpy(path,argv[1]);
     if (argc != 3)
         help(INVALID_ARGS, NULL);
-
     max_threads = atoi(argv[2]);
-    input_files_count = list_pngs(argv[1], &input_files_names);
+    input_files_count = list_pngs(path, &input_files_names);
     if (input_files_count == 0)
     {
         help(NO_FILES_FOUND, NULL);
     }
-    if (!create_directory(RESIZE_DIR))
-    {
-        help(DIR_CREATION_FAIL, NULL);
-    }
-    if (!create_directory(WATER_DIR))
-    {
-        help(DIR_CREATION_FAIL, NULL);
-    }
-    if (!create_directory(THUMB_DIR))
-    {
-        help(DIR_CREATION_FAIL, NULL);
-    }
+    create_output_directories(path);
     pthread_t *threads = (pthread_t *)malloc(max_threads * sizeof(pthread_t));
     if (NULL == threads)
         help(ALLOCATTIONION_FAIL, NULL);
 
     for (int i = 0; i < max_threads; i++)
     {
-        pthread_create(&(threads[i]), NULL, process_image_set, create_image_set(input_files_names, input_files_count, i, max_threads));
+        pthread_create(&(threads[i]), NULL, process_image_set, create_image_set(path,input_files_names, input_files_count, i, max_threads));
     }
     for (int i = 0; i < max_threads; i++)
     {
@@ -416,6 +433,7 @@ int main(int argc, char *argv[])
     {
         free(input_files_names[i]);
     }
+    free(path);
     free(input_files_names);
     free(threads);
     return 0;

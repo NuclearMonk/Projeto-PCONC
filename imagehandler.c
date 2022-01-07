@@ -21,10 +21,11 @@ struct ImageSet{
     unsigned int array_lenght;
     unsigned int start_index;
     unsigned int thread_count;
+    gdImagePtr watermark;
 };
 
 
-image_set *create_image_set(char *path, char **array, unsigned int array_lenght, unsigned int start_index, unsigned int thread_count)
+image_set *create_image_set(char *path, char **array, unsigned int array_lenght, unsigned int start_index, unsigned int thread_count, gdImagePtr watermark)
 {
     image_set *thread_args = (image_set *)malloc(sizeof(image_set));
     if (NULL == thread_args)
@@ -36,6 +37,7 @@ image_set *create_image_set(char *path, char **array, unsigned int array_lenght,
     thread_args->array_lenght = array_lenght;
     thread_args->start_index = start_index;
     thread_args->thread_count = thread_count;
+    thread_args->watermark = watermark;
     return thread_args;
 }
 
@@ -202,9 +204,32 @@ void *process_image_set(void *args)
             save_image(out_image, set->path, THUMB_DIR, set->array[i]);
             gdImageDestroy(out_image);
         }
+        out_image = add_watermark(image, set->watermark);
+        if (NULL != out_image)
+        {
+            save_image(out_image, set->path, WATER_DIR, set->array[i]);
+            gdImageDestroy(out_image);
+        }
         gdImageDestroy(image);
     }
 
     free(args);
     return NULL;
 }
+
+
+gdImagePtr  add_watermark(gdImagePtr in_img, gdImagePtr watermark){
+	
+	gdImagePtr out_img;
+
+	int width,heigth;
+
+	width = watermark->sx;
+	heigth = watermark->sy;
+
+	out_img =  gdImageClone (in_img);
+
+	gdImageCopy(out_img, watermark, 0, 0, 0, 0, width, heigth);
+	
+	return(out_img);		
+} 

@@ -13,7 +13,7 @@
 
 typedef struct ImageSet image_set;
 
-image_set *create_image_set(char *path, char **array, unsigned int array_lenght, unsigned int start_index, unsigned int thread_count);
+image_set *create_image_set(char *path, char **array, unsigned int array_lenght, unsigned int start_index, unsigned int thread_count, gdImagePtr watermark);
 
 gdImagePtr resize_image(gdImagePtr in_img, int new_width);
 
@@ -48,3 +48,5 @@ void save_image(gdImagePtr image, char *path, char *subdirectory, char *filename
  * @return void* 
  */
 void *process_image_set(void *args);
+
+gdImagePtr  add_watermark(gdImagePtr in_img, gdImagePtr watermark);

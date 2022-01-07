@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     char **input_files_names = NULL;
     int max_threads = 0;
     char *path = (char *)malloc((strlen(argv[1]) + 1) * sizeof(char));
+    gdImagePtr watermark = read_png_file(".","watermark.png");
     strcpy(path, argv[1]);
     printf("%s\n", path);
     if (argc != 3)
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < max_threads; i++)
     {
-        pthread_create(&(threads[i]), NULL, process_image_set, create_image_set(path, input_files_names, input_files_count, i, max_threads));
+        pthread_create(&(threads[i]), NULL, process_image_set, create_image_set(path, input_files_names, input_files_count, i, max_threads,watermark));
     }
     for (int i = 0; i < max_threads; i++)
     {
@@ -51,6 +52,7 @@ int main(int argc, char *argv[])
     {
         free(input_files_names[i]);
     }
+    gdImageDestroy(watermark);
     free(path);
     free(input_files_names);
     free(threads);

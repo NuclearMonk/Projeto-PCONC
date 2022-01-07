@@ -1,22 +1,22 @@
 /**
  * @file help.c
- * @author Manuel Soares,Eduardo Faustino
- * @brief 
+ * @author Manuel Soares,Eduardo David Faustino
+ * @brief
  * @version 0.1
  * @date 2022-01-07
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
 #include "help.h"
-#include "stdlib.h" 
+#include "stdlib.h"
 #include <stdio.h>
 
 /**
  * @brief Throws an error and exits the program
  *
- * 
+ *
  * @param error_id Error codes defined in by macro at the top of this file
  */
 void help(int error_id, char *extra_info)

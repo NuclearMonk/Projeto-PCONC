@@ -24,21 +24,31 @@ struct ImageSet{
     gdImagePtr watermark;
 };
 
-
+/**
+ * @brief Create a image set object
+ * 
+ * @param path The root path of the target directory
+ * @param array The array that holds the filenames
+ * @param array_lenght the number of files to handle
+ * @param start_index the index the thread should start counting on
+ * @param thread_count the number of avaiable threads doing the task
+ * @param watermark the image to be used as the watermark
+ * @return image_set* the image_set to be passed to the arguments of the thread 
+ */
 image_set *create_image_set(char *path, char **array, unsigned int array_lenght, unsigned int start_index, unsigned int thread_count, gdImagePtr watermark)
 {
-    image_set *thread_args = (image_set *)malloc(sizeof(image_set));
-    if (NULL == thread_args)
+    image_set *img_set = (image_set *)malloc(sizeof(image_set));
+    if (NULL == img_set)
     {
         help(ALLOCATTIONION_FAIL, NULL);
     }
-    thread_args->path = path;
-    thread_args->array = array;
-    thread_args->array_lenght = array_lenght;
-    thread_args->start_index = start_index;
-    thread_args->thread_count = thread_count;
-    thread_args->watermark = watermark;
-    return thread_args;
+    img_set->path = path;
+    img_set->array = array;
+    img_set->array_lenght = array_lenght;
+    img_set->start_index = start_index;
+    img_set->thread_count = thread_count;
+    img_set->watermark = watermark;
+    return img_set;
 }
 
 /**
@@ -68,7 +78,13 @@ gdImagePtr resize_image(gdImagePtr in_img, int new_width)
     return (out_img);
 }
 
-
+/**
+ * @brief Returns a scalled and cropped to square shape version of the provided image
+ * 
+ * @param in_img 
+ * @param size 
+ * @return gdImagePtr the output image
+ */
 gdImagePtr thumb_image(gdImagePtr in_img, int size)
 {
 
@@ -217,7 +233,13 @@ void *process_image_set(void *args)
     return NULL;
 }
 
-
+/**
+ * @brief Additively adds a watermark to the image
+ * 
+ * @param in_img 
+ * @param watermark 
+ * @return gdImagePtr 
+ */
 gdImagePtr  add_watermark(gdImagePtr in_img, gdImagePtr watermark){
 	
 	gdImagePtr out_img;

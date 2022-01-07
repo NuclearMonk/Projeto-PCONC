@@ -13,6 +13,7 @@
 
 typedef struct ImageSet image_set;
 
+
 image_set *create_image_set(char *path, char **array, unsigned int array_lenght, unsigned int start_index, unsigned int thread_count, gdImagePtr watermark);
 
 gdImagePtr resize_image(gdImagePtr in_img, int new_width);
@@ -38,6 +39,15 @@ gdImagePtr read_png_file(char *path, char *file_name);
 void save_image(gdImagePtr image, char *path, char *subdirectory, char *filename);
 
 /**
+ * @brief Additively adds a watermark to the image
+ * 
+ * @param in_img 
+ * @param watermark 
+ * @return gdImagePtr 
+ */
+gdImagePtr  add_watermark(gdImagePtr in_img, gdImagePtr watermark);
+
+/**
  * @brief 
  * Funcao de invocação para os threads de  processamento paralelo
  * Cada thread executa as transformações necessárias sobre um subconjunto do array dados
@@ -49,4 +59,3 @@ void save_image(gdImagePtr image, char *path, char *subdirectory, char *filename
  */
 void *process_image_set(void *args);
 
-gdImagePtr  add_watermark(gdImagePtr in_img, gdImagePtr watermark);

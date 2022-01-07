@@ -119,6 +119,11 @@ bool create_directory(char *path)
     return true;
 }
 
+/**
+ * @brief Create all output directories
+ * 
+ * @param path the base path
+ */
 void create_output_directories(char *path)
 {
     char *resize_result_path = (char *)malloc((strlen(path) + 1 + (strlen(RESIZE_DIR) + 1)) * sizeof(char));
@@ -144,6 +149,15 @@ void create_output_directories(char *path)
     free(water_result_path);
 }
 
+
+/**
+ * @brief Builds a string based on the provided base path, a subdirectory and the file name
+ * path/subdirectory/filename
+ * @param path the base path
+ * @param subdirectory the target subdirectory
+ * @param filename the target filename
+ * @return char* the full filepath
+ */
 inline char *file_path(char *path, char *subdirectory, char *filename)
 {
     int filename_len = strlen(path) + 1 + strlen(subdirectory) + strlen(filename) + 1;

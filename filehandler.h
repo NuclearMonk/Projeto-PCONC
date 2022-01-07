@@ -25,7 +25,16 @@
  */
 bool check_file_ext(char *filename, char *extention);
 
-char * file_path(char* path, char* subdirectory, char* filename);
+/**
+ * @brief Builds a string based on the provided base path, a subdirectory and the file name
+ * path/subdirectory/filename
+ * @param path the base path
+ * @param subdirectory the target subdirectory
+ * @param filename the target filename
+ * @return char* the full filepath
+ */
+char *file_path(char *path, char *subdirectory, char *filename);
+
 /**
  * @brief 
  * Dado o string para um path retorna o numero de ficheiros png dentro desse path, retorna tambem um array com os nomes desses ficheiros
@@ -35,4 +44,10 @@ char * file_path(char* path, char* subdirectory, char* filename);
  */
 int list_pngs(char *path, char ***filenames);
 
+
+/**
+ * @brief Create all output directories
+ * 
+ * @param path the base path
+ */
 void create_output_directories(char *path);

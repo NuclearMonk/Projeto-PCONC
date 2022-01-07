@@ -1,7 +1,7 @@
 # Programação Concorrente
 ## 2021/2022 
 ### Semestre 1 Período 2
-### 96267 Manuel Soares, ?????? Eduardo Faustino
+### 96267 Manuel Soares, 102298 Eduardo Faustino
 
 Instruções de build:
 `make`

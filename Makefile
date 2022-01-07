@@ -1,22 +1,23 @@
 CC = gcc
-flags = -g -o
+flags = -g -O3
 libs = -pthread -lgd
 
+all: ap-paralelo-simples clean
 
-all: ap-paralelo-simples serial-simples serial-complexo
+ap-paralelo-simples: main.o filehandler.o imagehandler.o help.o
+	${CC} ${flags} -o ap-paralelo-simples main.o filehandler.o imagehandler.o help.o ${libs}
 
-ap-paralelo-simples: clean
-	${CC} ap-paralelo-simples.c ${flags} ap-paralelo-simples ${libs}
+main.o: main.c
+	${CC} -c  ${flags} main.c ${libs} 
 
-serial-simples: serial-simples.c
-	${CC} serial-simples.c ${flags} serial-simples ${libs}
+help.o: help.h help.c
+	${CC} -c ${flags} help.c ${libs}
 
+filehandler.o: filehandler.h filehandler.c
+	${CC} -c ${flags} filehandler.c ${libs} 
 
-serial-complexo: serial-complexo.c
-	${CC} serial-complexo.c ${flags} serial-complexo ${libs}
-
-
-
+imagehandler.o: imagehandler.h imagehandler.c
+	${CC} -c ${flags} imagehandler.c ${libs} 
 .PHONY : clean
 clean:
-	rm -f *.o ap-paralelo-simples serial-simples serial-complexo
+	rm -f *.o

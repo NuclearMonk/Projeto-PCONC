@@ -17,6 +17,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <unistd.h>
 #include "help.h"
 
 
@@ -52,7 +53,8 @@ bool check_file_ext(char *filename, char *extention)
  * Dado o string para um path retorna o numero de ficheiros png dentro desse path, retorna tambem um array com os nomes desses ficheiros
  * @param path o path a explorar
  * @param filenames um ponteiro onde guardar o array de string com o nome de todos os ficheiros .png
- * @return int o numero de ficheiros png encontrado
+ * @return o numero de ficheiros png encontrado, -1 se não foi possível abrir o ficheiro da lista de imagens, ou -2 se
+ * houve um erro a alocar memória
  */
 int list_pngs(char *path, char ***filenames)
 {
@@ -61,15 +63,19 @@ int list_pngs(char *path, char ***filenames)
 	FILE *file = fopen(imgs_file_path, "r");
     free(imgs_file_path);
 	if (NULL == file) {
+		help(FILE_NOT_FOUND, NULL);
 		return -1;
 	}
 
 	int filecount = 0;
 	while (1 == fscanf(file, "%255s ", filename)) {
-		++filecount;
+		if (!imgExistsInOutputDirs(path, filename)) {
+			++filecount;
+		} else {
+			printf("File \"%s\" already exists - ignoring it.\n", filename);
+		}
 	}
 	if (0 == filecount) {
-		help(FILE_NOT_FOUND, NULL);
 		fclose(file);
 
 		return 0;
@@ -85,6 +91,9 @@ int list_pngs(char *path, char ***filenames)
 		return -2;
 	}
 	for (int i = 0; 1 == fscanf(file, "%255s ", filename); ++i) {
+		if (imgExistsInOutputDirs(path, filename)) {
+			continue;
+		}
 		int string_length = strlen(filename) + 1;
 		(*filenames)[i] = malloc(string_length * sizeof(char));
 		strncpy((*filenames)[i], filename, string_length);
@@ -93,6 +102,31 @@ int list_pngs(char *path, char ***filenames)
 	fclose(file);
 
 	return filecount;
+}
+
+bool imgExistsInOutputDirs(char *path, char* img_file_name) {
+	char *img_file_path = file_path(path, RESIZE_DIR, img_file_name);
+	bool file_exists = (0 == access(img_file_path, F_OK)) ? true : false;
+	free(img_file_path);
+	if (!file_exists) {
+		return false;
+	}
+
+	img_file_path = file_path(path, THUMB_DIR, img_file_name);
+	file_exists = (0 == access(img_file_path, F_OK)) ? true : false;
+	free(img_file_path);
+	if (!file_exists) {
+		return false;
+	}
+
+	img_file_path = file_path(path, WATER_DIR, img_file_name);
+	file_exists = (0 == access(img_file_path, F_OK)) ? true : false;
+	free(img_file_path);
+	if (!file_exists) {
+		return false;
+	}
+
+	return true;
 }
 
 /**

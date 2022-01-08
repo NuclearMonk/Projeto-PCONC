@@ -55,14 +55,16 @@ bool check_file_ext(char *filename, char *extention)
  */
 int list_pngs(char *path, char ***filenames)
 {
+    char filename[256];
 	char *imgs_file_path = file_path(path, "", "img-process-list.txt");
 	FILE *file = fopen(imgs_file_path, "r");
+    free(imgs_file_path);
 	if (NULL == file) {
 		return -1;
 	}
 
 	int filecount = 0;
-	while (1 == fscanf(file, "%s", imgs_file_path)) {
+	while (1 == fscanf(file, "%255s ", filename)) {
 		++filecount;
 	}
 	if (0 == filecount) {
@@ -81,10 +83,10 @@ int list_pngs(char *path, char ***filenames)
 
 		return -2;
 	}
-	for (int i = 0; 1 == fscanf(file, "%s", imgs_file_path); ++i) {
-		int string_length = strlen(imgs_file_path) + 1;
+	for (int i = 0; 1 == fscanf(file, "%255s ", filename); ++i) {
+		int string_length = strlen(filename) + 1;
 		(*filenames)[i] = malloc(string_length * sizeof(char));
-		strncpy((*filenames)[i], imgs_file_path, string_length);
+		strncpy((*filenames)[i], filename, string_length);
 	}
 
 	fclose(file);

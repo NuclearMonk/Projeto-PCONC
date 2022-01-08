@@ -26,8 +26,8 @@ void help(int error_id, char *extra_info)
     case INVALID_ARGS:
         fprintf(stderr, "Invalid Arguments\nProper Argument usage is\n./ap-paralelo-simples TARGER_DIRECTORY MAX_THREADS\n");
         exit(EXIT_FAILURE);
-    case DIR_NOT_FOUND:
-        fprintf(stderr, "Target Directory Not Found\n");
+    case FILE_NOT_FOUND:
+        fprintf(stderr, "Target File Not Found\n");
         exit(EXIT_FAILURE);
     case DIR_CREATION_FAIL:
         fprintf(stderr, "Final Directory Creations Failed\n");

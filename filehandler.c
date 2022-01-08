@@ -1,12 +1,12 @@
 /**
  * @file filehandler.c
  * @author Manuel Soares,Eduardo Faustino
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2022-01-07
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
 #include "filehandler.h"
@@ -25,8 +25,8 @@
  *        Retorna falso se o ficheiro for composto apenas pela extenção, mesmo que a extensão seja a correta
  * @param filename nome do ficheiro a verificar
  * @param extention extenção contra a qual estamos a comparar
- * @return true 
- * @return false 
+ * @return true
+ * @return false
  */
 bool check_file_ext(char *filename, char *extention)
 {
@@ -47,7 +47,7 @@ bool check_file_ext(char *filename, char *extention)
 }
 
 /**
- * @brief 
+ * @brief
  * Dado o string para um path retorna o numero de ficheiros png dentro desse path, retorna tambem um array com os nomes desses ficheiros
  * @param path o path a explorar
  * @param filenames um ponteiro onde guardar o array de string com o nome de todos os ficheiros .png
@@ -55,51 +55,48 @@ bool check_file_ext(char *filename, char *extention)
  */
 int list_pngs(char *path, char ***filenames)
 {
-    unsigned int filecount = 0;
-    unsigned int aux = 0;
-    struct dirent *de;
-    DIR *dir = opendir(path);
-    if (NULL == dir)
-    {
-        help(DIR_NOT_FOUND, NULL);
-    }
-    while ((de = readdir(dir)) != NULL)
-    {
-        if (check_file_ext(de->d_name, ".png"))
-        {
-            filecount++;
-        }
-    }
-    if (filecount == 0)
-        return 0;
-    rewinddir(dir);
-    (*filenames) = (char **)malloc(filecount * sizeof(char *));
-    if (NULL == (*filenames))
-    {
-        help(ALLOCATTIONION_FAIL, NULL);
-    }
-    while ((de = readdir(dir)) != NULL)
-    {
-        if (check_file_ext(de->d_name, ".png"))
-        {
-            (*filenames)[aux] = (char *)malloc((strlen(de->d_name) + 1) * sizeof(char));
-            if (NULL == (*filenames)[aux])
-            {
-                help(ALLOCATTIONION_FAIL, NULL);
-            }
-            strcpy((*filenames)[aux], de->d_name);
-            aux++;
-        }
-    }
-    closedir(dir);
-    return filecount;
+	char *imgs_file_path = file_path(path, "", "img-process-list.txt");
+	FILE *file = fopen(imgs_file_path, "r");
+	if (NULL == file) {
+		return -1;
+	}
+
+	int filecount = 0;
+	while (1 == fscanf(file, "%s", imgs_file_path)) {
+		++filecount;
+	}
+	if (0 == filecount) {
+		help(FILE_NOT_FOUND, NULL);
+		fclose(file);
+
+		return 0;
+	}
+
+	rewind(file);
+
+	*filenames = malloc(filecount * sizeof(char *));
+	if (NULL == *filenames) {
+		help(ALLOCATTIONION_FAIL, NULL);
+		fclose(file);
+
+		return -2;
+	}
+	for (int i = 0; 1 == fscanf(file, "%s", imgs_file_path); ++i) {
+		int string_length = strlen(imgs_file_path) + 1;
+		(*filenames)[i] = malloc(string_length * sizeof(char));
+		strncpy((*filenames)[i], imgs_file_path, string_length);
+	}
+
+	fclose(file);
+
+	return filecount;
 }
 
 /**
  * @brief Checks if a given directory exists, if it doesn't it creates it
- * 
+ *
  * @param path string with the target directory path
- * @return true if the directory exists 
+ * @return true if the directory exists
  * @return false if the creation of the directory failed
  */
 bool create_directory(char *path)
@@ -121,7 +118,7 @@ bool create_directory(char *path)
 
 /**
  * @brief Create all output directories
- * 
+ *
  * @param path the base path
  */
 void create_output_directories(char *path)

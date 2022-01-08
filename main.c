@@ -4,7 +4,7 @@
  *
  * Projecto - Parte 1
  *                           ap-paralelo-simples.c
- * 
+ *
  * Compilacao: make ap-paralelo-simples
  * Author: MAnuel Soares, Eduardo Faustino
  *****************************************************************************/

@@ -30,6 +30,8 @@ int main(int argc, char *argv[])
         help(INVALID_ARGS, NULL);
     max_threads = atoi(argv[2]);
     input_files_count = list_pngs(path, &input_files_names);
+    max_threads = max_threads<input_files_count ? max_threads : input_files_count;
+    printf("using %d Threads\n", max_threads);
     if (input_files_count == 0)
     {
         help(NO_FILES_FOUND, NULL);

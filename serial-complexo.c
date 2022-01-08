@@ -4,9 +4,9 @@
  *
  * Projecto - Parte1
  *                           serial-complexo.c
- * 
+ *
  * Compilacao: gcc serial-complexo -o serial-complex -lgd
- *           
+ *
  *****************************************************************************/
 
 #include "gd.h"
@@ -33,20 +33,20 @@
  *
  *****************************************************************************/
 gdImagePtr  add_watermark(gdImagePtr in_img, gdImagePtr watermark){
-	
+
 	gdImagePtr out_img;
 
-	int width,heigth;
+	int width,height;
 
 	width = watermark->sx;
-	heigth = watermark->sy;
+	height = watermark->sy;
 
 	out_img =  gdImageClone (in_img);
 
-	gdImageCopy(out_img, watermark, 0, 0, 0, 0, width, heigth);
-	
-	return(out_img);		
-} 
+	gdImageCopy(out_img, watermark, 0, 0, 0, 0, width, height);
+
+	return(out_img);
+}
 
 /******************************************************************************
  * resize_image()
@@ -61,25 +61,25 @@ gdImagePtr  add_watermark(gdImagePtr in_img, gdImagePtr watermark){
  *
  *****************************************************************************/
 gdImagePtr  resize_image(gdImagePtr in_img ,int new_width){
-	
+
 	gdImagePtr out_img;
-	int width,heigth;
-	
+	int width,height;
+
 	// Get the image's width and height
-	
+
 	width = in_img->sx;
-	heigth = in_img->sy;
-	int new_heigth = (int) new_width *1.0/width * heigth;
-		
+	height = in_img->sy;
+	int new_height = (int) new_width *1.0/width * height;
+
 
 	gdImageSetInterpolationMethod(in_img, GD_BILINEAR_FIXED);
-    out_img = gdImageScale(in_img, new_width, new_heigth);
+    out_img = gdImageScale(in_img, new_width, new_height);
 	if (!out_img) {
 		return NULL;
 	}
 
-	return(out_img);		
-} 
+	return(out_img);
+}
 
 /******************************************************************************
  * make_thumb()
@@ -93,28 +93,28 @@ gdImagePtr  resize_image(gdImagePtr in_img ,int new_width){
  *
  *****************************************************************************/
 gdImagePtr  make_thumb(gdImagePtr in_img, int size){
-	
+
 	gdImagePtr out_img, aux_img;
 
 
-	int width,heigth;
-	int new_heigth, new_width;
+	int width,height;
+	int new_height, new_width;
 	// Get the image's width and height
 
 	width = in_img->sx;
-	heigth = in_img->sy;
+	height = in_img->sy;
 
-	if (heigth > width){
+	if (height > width){
 		new_width = size;
-		new_heigth = (int) new_width *1.0/width * heigth;
+		new_height = (int) new_width *1.0/width * height;
 	}else{
-		new_heigth = size;
-		new_width = (int) new_heigth * 1.0 / heigth * width;
+		new_height = size;
+		new_width = (int) new_height * 1.0 / height * width;
 	}
-		
+
 
 	gdImageSetInterpolationMethod(in_img, GD_BILINEAR_FIXED);
-    aux_img = gdImageScale(in_img, new_width, new_heigth);
+    aux_img = gdImageScale(in_img, new_width, new_height);
 	if (!aux_img) {
 		return NULL;
     }
@@ -133,8 +133,8 @@ gdImagePtr  make_thumb(gdImagePtr in_img, int size){
 		return NULL;
     }
 
-	return(out_img);		
-} 
+	return(out_img);
+}
 
 /******************************************************************************
  * read_png_file()
@@ -197,7 +197,7 @@ int write_png_file(gdImagePtr write_img, char * file_name){
  *                 0 in case of failure to create
  * Side-Effects: none
  *
- * Description: Create a directory. 
+ * Description: Create a directory.
  *
  *****************************************************************************/
 int create_directory(char * dir_name){
@@ -222,14 +222,14 @@ int create_directory(char * dir_name){
  * Side-Effects: creates thumbnail, resized copy and watermarked copies
  *               of images
  *
- * Description: implementation of the complex serial version 
+ * Description: implementation of the complex serial version
  *              This application only works for a fixed pre-defined set of files
  *
  *****************************************************************************/
 int main(){
 
 	/* array containg the names of files to be processed	 */
-	char * files [] =  {"Lisboa-1.png", "IST-1.png", "IST-2.png", "IST-3.png", "00841.png", "00844.png", "00846.png", "00849.png" }; 
+	char * files [] =  {"Lisboa-1.png", "IST-1.png", "IST-2.png", "IST-3.png", "00841.png", "00844.png", "00846.png", "00849.png" };
 	/* length of the files array (number of files to be processed	 */
 	int nn_files = 8;
 
@@ -263,10 +263,10 @@ int main(){
 		exit(-1);
 	}
 
-	/* 1st iteration over all the files 
+	/* 1st iteration over all the files
 	 * To resize images
 	 */
-	for (int i = 0; i < nn_files; i++){	
+	for (int i = 0; i < nn_files; i++){
 
 		printf("resize %s\n", files[i]);
 		/* load of the input file */
@@ -291,10 +291,10 @@ int main(){
 	}
 
 
-	/* 2nd iteration over all the files 
+	/* 2nd iteration over all the files
 	 * To create the thumbnails
 	 */
-	for (int i = 0; i < nn_files; i++){	
+	for (int i = 0; i < nn_files; i++){
 
 	   	printf("thumbnail %s\n", files[i]);
 		/* load of the input file */
@@ -320,10 +320,10 @@ int main(){
 
 	}
 
-	/* 3rd iteration over all the files 
+	/* 3rd iteration over all the files
 	 * To add the watermarks
 	 */
-	for (int i = 0; i < nn_files; i++){	
+	for (int i = 0; i < nn_files; i++){
 
 	    printf("watermark  %s\n", files[i]);
 		/* load of the input file */

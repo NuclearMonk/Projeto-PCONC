@@ -16,16 +16,6 @@
 #define WATER_DIR "Watermark/"
 
 /**
- * @brief verifica a extençao de um ficheiro dado o seu nome
- *        Retorna falso se o ficheiro for composto apenas pela extenção, mesmo que a extensão seja a correta
- * @param filename nome do ficheiro a verificar
- * @param extention extenção contra a qual estamos a comparar
- * @return true
- * @return false
- */
-bool check_file_ext(char *filename, char *extention);
-
-/**
  * @brief Builds a string based on the provided base path, a subdirectory and the file name
  * path/subdirectory/filename
  * @param path the base path

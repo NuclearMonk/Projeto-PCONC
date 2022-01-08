@@ -28,19 +28,19 @@ int main(int argc, char *argv[])
 	unsigned int input_files_count = 0;
 	char **input_files_names = NULL;
 	int max_threads = 0;
-	char *path = (char *)malloc((strlen(argv[1]) + 1) * sizeof(char));
+	char *base_path = (char *)malloc((strlen(argv[1]) + 1) * sizeof(char));
 	gdImagePtr watermark = read_png_file(".", "watermark.png");
 
-	strcpy(path, argv[1]);
-	printf("%s\n", path);
+	strcpy(base_path, argv[1]);
+	printf("%s\n", base_path);
 
 	max_threads = atoi(argv[2]);
-	input_files_count = list_pngs(path, &input_files_names);
+	input_files_count = list_pngs(base_path, &input_files_names);
 	if (0 == input_files_count)
 	{
 		help(NO_FILES_FOUND, NULL);
 		gdImageDestroy(watermark);
-		free(path);
+		free(base_path);
 		free(input_files_names);
 
 		return EXIT_FAILURE;
@@ -48,12 +48,12 @@ int main(int argc, char *argv[])
 
 	max_threads = max_threads < input_files_count ? max_threads : input_files_count;
 	printf("using %d Threads\n", max_threads);
-	create_output_directories(path);
+	create_output_directories(base_path);
 	pthread_t *threads = (pthread_t *)malloc(max_threads * sizeof(pthread_t));
 	if (NULL == threads) {
-		help(ALLOCATTIONION_FAIL, NULL);
+		help(ALLOCATION_FAIL, NULL);
 		gdImageDestroy(watermark);
-		free(path);
+		free(base_path);
 		free(input_files_names);
 		free(threads);
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	for (int i = 0; i < max_threads; ++i)
 	{
 		pthread_create(&(threads[i]), NULL, process_image_set,
-					   create_image_set(path, input_files_names, input_files_count, i, max_threads,watermark));
+					   create_image_set(base_path, input_files_names, input_files_count, i, max_threads,watermark));
 	}
 	for (int i = 0; i < max_threads; ++i)
 	{
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	}
 
 	gdImageDestroy(watermark);
-	free(path);
+	free(base_path);
 	free(input_files_names);
 	free(threads);
 

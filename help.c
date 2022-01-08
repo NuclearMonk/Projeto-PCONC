@@ -35,7 +35,7 @@ void help(int error_id, char *extra_info)
 			fprintf(stderr, "Final Directory Creations Failed\n");
 
 			break;
-		case ALLOCATTIONION_FAIL:
+		case ALLOCATION_FAIL:
 			fprintf(stderr, "Memory Allocation Failed\n");
 
 			break;

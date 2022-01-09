@@ -49,7 +49,7 @@ int list_pngs(char *imgs_path, char ***img_names)
 
 	rewind(file);
 
-	*img_names = malloc(filecount * sizeof(char *));
+	*img_names = (char**)malloc(filecount * sizeof(char *));
 	if (NULL == *img_names) {
 		help(ALLOCATION_FAIL, NULL);
 		fclose(file);
@@ -64,7 +64,7 @@ int list_pngs(char *imgs_path, char ***img_names)
 		}
 
 		int string_length = strlen(img_name) + 1;
-		(*img_names)[i] = malloc(string_length * sizeof(char));
+		(*img_names)[i] = (char*)malloc(string_length * sizeof(char));
 		strncpy((*img_names)[i], img_name, string_length);
 
 		++i;

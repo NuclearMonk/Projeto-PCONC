@@ -19,6 +19,9 @@ filehandler.o: filehandler.h filehandler.c
 imagehandler.o: imagehandler.h imagehandler.c
 	${CC} -c ${flags} imagehandler.c ${libs}
 
+teste:
+	./ap-paralelo-simples ../Images/Small -1
+
 .PHONY : clean
 clean:
 	rm -f *.o

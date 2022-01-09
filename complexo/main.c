@@ -10,6 +10,7 @@
  *****************************************************************************/
 #pragma region INCLUDES
 #include <gd.h>
+#include <limits.h>
 #include <string.h>
 #include <pthread.h>
 #include "help.h"
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	unsigned int input_files_count = 0;
+	int input_files_count = 0;
 	char **input_files_names = NULL;
 	int max_threads = 0;
 	char *base_path = (char *)malloc((strlen(argv[1]) + 1) * sizeof(char));
@@ -34,7 +35,8 @@ int main(int argc, char *argv[])
 	printf("Imgs path: %s\n", base_path);
 
 	gdImagePtr watermark = read_png_file(base_path, "watermark.png");
-	max_threads = atoi(argv[2]);
+	max_threads = atoi(argv[2]) ;
+	max_threads = max_threads<0 ? INT_MAX : max_threads;
 	input_files_count = list_pngs(base_path, &input_files_names);
 	if (0 == input_files_count)
 	{
@@ -70,7 +72,7 @@ int main(int argc, char *argv[])
 		pthread_join(threads[i], NULL);
 	}
 
-	for (unsigned int i = 0; i < input_files_count; ++i)
+	for (int i = 0; i < input_files_count; ++i)
 	{
 		free(input_files_names[i]);
 	}

@@ -1,17 +1,12 @@
 .vscode
-simples/Resize
+
+# Pastas de imagens geradas
+Resize
 Thumbnail
 Watermark
-ap-paralelo-simples
-serial-complexo
-serial-simples
-Images
-../00841.png
-../00844.png
-../00846.png
-../00849.png
-../IST-1.png
-../IST-2.png
-../IST-3.png
-../Lisboa-1.png
+
+# Executáveis
+ap-paralelo-*
+
+# Todas as imagens
 *.png

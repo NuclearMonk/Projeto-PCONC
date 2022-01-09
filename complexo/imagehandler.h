@@ -29,6 +29,25 @@ typedef struct ImageSet image_set;
 image_set *create_image_set(char *imgs_path, char **array, unsigned int array_length, unsigned int start_index,
 							unsigned int thread_count, gdImagePtr watermark) __attribute__((nonnull, returns_nonnull));
 
+
+/**
+ * @brief 
+ * 
+ * @param imgs_path the path to the target directory
+ * @param filenames an array filled with the filenames of the files to be opened
+ * @param file_count the number of entries in the filenames array
+ * @return gdImagePtr* Array with pointers to the corresponding gdImages that were just opened
+ */
+gdImagePtr * read_all_png_files(char* imgs_path,char** filenames, int file_count);
+
+/**
+ * @brief Frees an array of images
+ * 
+ * @param images the array of images
+ * @param image_count the number of entries in the array
+ */
+void free_all_images(gdImagePtr* images, int image_count);
+
 /**
  * @brief reads a png file to a gdImage
  *

@@ -17,6 +17,7 @@
 struct ImageSet{
 	char *imgs_path;
 	char **filenames_array;
+	gdImagePtr* image_array;
 	unsigned int array_length;
 	unsigned int start_index;
 	unsigned int thread_count;
@@ -68,6 +69,28 @@ void *process_image_set(void *args)
 
 	return NULL;
 }
+
+gdImagePtr* read_all_png_files(char* imgs_path,char** filenames,int file_count){
+	gdImagePtr* array = (gdImagePtr*)malloc(file_count * sizeof(gdImagePtr));
+	if(NULL == array){
+		help(ALLOCATION_FAIL,NULL);
+		exit(EXIT_FAILURE);
+	}
+	for (int i = 0; i < file_count; i++)
+	{
+		array[i]= read_png_file(imgs_path,filenames[i]);
+	}
+	return array;
+}
+
+void free_all_images(gdImagePtr* images, int image_count){
+	for (int i = 0; i < image_count; i++)
+	{
+		gdImageDestroy(images[i]);
+	}
+	free(images);
+}
+
 
 gdImagePtr read_png_file(char *imgs_path, char *img_name)
 {

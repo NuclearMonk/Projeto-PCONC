@@ -2,8 +2,6 @@ CC = gcc
 flags = -g -O3 -std=c99 -Wall -Wextra -Werror=pedantic -Werror=format=2 -pedantic-errors -Wno-unknown-pragmas
 libs = -pthread -lgd
 
-.PHONY : all clean
-
 all: ap-paralelo-simples clean
 
 ap-paralelo-simples: main.o filehandler.o imagehandler.o help.o
@@ -21,5 +19,6 @@ filehandler.o: filehandler.h filehandler.c
 imagehandler.o: imagehandler.h imagehandler.c
 	${CC} -c ${flags} imagehandler.c ${libs}
 
+.PHONY : clean
 clean:
 	rm -f *.o

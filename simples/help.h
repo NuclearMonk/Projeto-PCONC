@@ -17,6 +17,9 @@
 #define NO_FILES_FOUND 5
 #define FILE_READ_FAIL 6
 #define FILE_WRITE_FAIL 7
+#define ERR_RESIZE 9
+#define ERR_THUMB 10
+#define ERR_WATER 11
 #pragma endregion
 
 

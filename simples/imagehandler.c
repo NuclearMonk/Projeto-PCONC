@@ -15,16 +15,94 @@
 #include "filehandler.h"
 
 struct ImageSet{
-	char *base_path;
-	char **array;
+	char *imgs_path;
+	char **filenames_array;
 	unsigned int array_length;
 	unsigned int start_index;
 	unsigned int thread_count;
 	gdImagePtr watermark;
 };
 
-image_set *create_image_set(char *base_path, char **array, unsigned int array_length, unsigned int start_index,
-							unsigned int thread_count, gdImagePtr watermark)
+
+void *process_image_set(void *args)
+{
+	image_set *set = (image_set *)args;
+	gdImagePtr image = NULL, out_image = NULL;
+	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
+	{
+		printf("%s\n", set->filenames_array[i]);
+		image = read_png_file(set->imgs_path, set->filenames_array[i]);
+		if (NULL == image)
+		{
+			continue;
+		}
+
+		out_image = resize_image(image, 640);
+		if (NULL == out_image) {
+			help(ERR_RESIZE, set->filenames_array[i]);
+		} else {
+			save_image(out_image, set->imgs_path, RESIZE_DIR, set->filenames_array[i]);
+			gdImageDestroy(out_image);
+		}
+
+		out_image = thumb_image(image, 640);
+		if (NULL == out_image) {
+			help(ERR_THUMB, set->filenames_array[i]);
+		} else {
+			save_image(out_image, set->imgs_path, THUMB_DIR, set->filenames_array[i]);
+			gdImageDestroy(out_image);
+		}
+
+		out_image = add_watermark(image, set->watermark);
+		if (NULL == out_image) {
+			help(ERR_WATER, set->filenames_array[i]);
+		} else {
+			save_image(out_image, set->imgs_path, WATER_DIR, set->filenames_array[i]);
+			gdImageDestroy(out_image);
+		}
+
+		gdImageDestroy(image);
+	}
+
+	free(args);
+
+	return NULL;
+}
+
+gdImagePtr read_png_file(char *imgs_path, char *img_name)
+{
+
+	FILE *fp = NULL;
+	gdImagePtr read_img = NULL;
+	char *file = imgPathGenerator(imgs_path, "", img_name);
+	fp = fopen(file, "rb");
+
+	if (NULL == fp)
+	{
+		help(FILE_READ_FAIL, file);
+		free(file);
+
+		return NULL;
+	}
+
+	read_img = gdImageCreateFromPng(fp);
+	fclose(fp);
+
+	if (NULL == read_img)
+	{
+		help(FILE_READ_FAIL, file);
+		free(file);
+
+		return NULL;
+	}
+
+	free(file);
+
+	return read_img;
+}
+
+image_set *create_image_set(char *imgs_path, char **array, unsigned int array_length,
+							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark)
 {
 	image_set *img_set = (image_set *)malloc(sizeof(image_set));
 	if (NULL == img_set)
@@ -34,8 +112,8 @@ image_set *create_image_set(char *base_path, char **array, unsigned int array_le
 		exit(EXIT_FAILURE);
 	}
 
-	img_set->base_path = base_path;
-	img_set->array = array;
+	img_set->imgs_path = imgs_path;
+	img_set->filenames_array = array;
 	img_set->array_length = array_length;
 	img_set->start_index = start_index;
 	img_set->thread_count = thread_count;
@@ -66,7 +144,6 @@ gdImagePtr resize_image(gdImagePtr in_img, int new_width)
 
 gdImagePtr thumb_image(gdImagePtr in_img, int size)
 {
-
 	gdImagePtr out_img = NULL, aux_img = NULL;
 
 	int width = 0, height = 0;
@@ -111,40 +188,11 @@ gdImagePtr thumb_image(gdImagePtr in_img, int size)
 	return out_img;
 }
 
-gdImagePtr read_png_file(char *base_path, char *file_name)
+void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char *img_name)
 {
-
-	FILE *fp = NULL;
-	gdImagePtr read_img = NULL;
-	char *file = file_path(base_path, "", file_name);
-	fp = fopen(file, "rb");
-
-	if (!fp)
-	{
-		help(FILE_READ_FAIL, file);
-
-		return NULL;
-	}
-
-	read_img = gdImageCreateFromPng(fp);
-
-	fclose(fp);
-
-	if (NULL == read_img)
-	{
-		help(FILE_READ_FAIL, file);
-
-		return NULL;
-	}
-	free(file);
-	return read_img;
-}
-
-void save_image(gdImagePtr image, char *base_path, char *subdirectory, char *filename)
-{
-	char *out_file = file_path(base_path, subdirectory, filename);
+	char *out_file = imgPathGenerator(img_final_path, subdirectory, img_name);
 	FILE *fp = fopen(out_file, "w");
-	if (!fp)
+	if (NULL == fp)
 	{
 		help(FILE_WRITE_FAIL, out_file);
 
@@ -155,45 +203,7 @@ void save_image(gdImagePtr image, char *base_path, char *subdirectory, char *fil
 	fclose(fp);
 }
 
-void *process_image_set(void *args)
-{
-	image_set *set = (image_set *)args;
-	gdImagePtr image = NULL, out_image = NULL;
-	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
-	{
-		printf("%s\n", set->array[i]);
-		image = read_png_file(set->base_path, set->array[i]);
-		if (NULL == image)
-		{
-			continue;
-		}
-
-		out_image = resize_image(image, 640);
-		if (NULL != out_image)
-		{
-			save_image(out_image, set->base_path, RESIZE_DIR, set->array[i]);
-			gdImageDestroy(out_image);
-		}
-		out_image = thumb_image(image, 640);
-		if (NULL != out_image)
-		{
-			save_image(out_image, set->base_path, THUMB_DIR, set->array[i]);
-			gdImageDestroy(out_image);
-		}
-		out_image = add_watermark(image, set->watermark);
-		if (NULL != out_image)
-		{
-			save_image(out_image, set->base_path, WATER_DIR, set->array[i]);
-			gdImageDestroy(out_image);
-		}
-		gdImageDestroy(image);
-	}
-
-	free(args);
-	return NULL;
-}
-
-gdImagePtr  add_watermark(gdImagePtr in_img, gdImagePtr watermark){
+gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark){
 
 	gdImagePtr out_img = NULL;
 

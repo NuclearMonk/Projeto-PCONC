@@ -3,9 +3,9 @@
  * MEEC 2021/2022
  *
  * Projecto - Parte 1
- *                           ap-paralelo-simples.c
+ *                           ap-complexo-simples.c
  *
- * Compilacao: make ap-paralelo-simples
+ * Compilacao: make ap-complexo-simples
  * Author: MAnuel Soares, Eduardo Faustino
  *****************************************************************************/
 #pragma region INCLUDES
@@ -29,18 +29,18 @@ int main(int argc, char *argv[])
 	char **input_files_names = NULL;
 	int max_threads = 0;
 	char *base_path = (char *)malloc((strlen(argv[1]) + 1) * sizeof(char));
-	gdImagePtr watermark = read_png_file(".", "watermark.png");
 
 	strcpy(base_path, argv[1]);
-	printf("%s\n", base_path);
+	printf("Imgs path: %s\n", base_path);
 
+	gdImagePtr watermark = read_png_file(base_path, "watermark.png");
 	max_threads = atoi(argv[2]);
 	input_files_count = list_pngs(base_path, &input_files_names);
 	if (0 == input_files_count)
 	{
 		help(NO_FILES_FOUND, NULL);
-		gdImageDestroy(watermark);
 		free(base_path);
+		gdImageDestroy(watermark);
 		free(input_files_names);
 
 		return EXIT_FAILURE;
@@ -52,8 +52,8 @@ int main(int argc, char *argv[])
 	pthread_t *threads = (pthread_t *)malloc(max_threads * sizeof(pthread_t));
 	if (NULL == threads) {
 		help(ALLOCATION_FAIL, NULL);
-		gdImageDestroy(watermark);
 		free(base_path);
+		gdImageDestroy(watermark);
 		free(input_files_names);
 		free(threads);
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	for (int i = 0; i < max_threads; ++i)
 	{
 		pthread_create(&(threads[i]), NULL, process_image_set,
-					   create_image_set(base_path, input_files_names, input_files_count, i, max_threads,watermark));
+					   create_image_set(base_path, input_files_names, input_files_count, i, max_threads, watermark));
 	}
 	for (int i = 0; i < max_threads; ++i)
 	{
@@ -75,8 +75,8 @@ int main(int argc, char *argv[])
 		free(input_files_names[i]);
 	}
 
-	gdImageDestroy(watermark);
 	free(base_path);
+	gdImageDestroy(watermark);
 	free(input_files_names);
 	free(threads);
 

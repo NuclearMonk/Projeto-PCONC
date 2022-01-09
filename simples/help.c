@@ -24,7 +24,7 @@ void help(int error_id, char *extra_info)
 	switch (error_id)
 	{
 		case INVALID_ARGS:
-			fprintf(stderr, "Invalid Arguments\nProper Argument usage is\n./ap-paralelo-simples TARGER_DIRECTORY MAX_THREADS\n");
+			fprintf(stderr, "Invalid Arguments\nProper Argument usage is\n./ap-complexo-simples TARGER_DIRECTORY MAX_THREADS\n");
 
 			break;
 		case FILE_NOT_FOUND:
@@ -49,6 +49,18 @@ void help(int error_id, char *extra_info)
 			break;
 		case FILE_WRITE_FAIL:
 			fprintf(stderr, "%s : Failed to write file\n", extra_info);
+
+			break;
+		case ERR_RESIZE:
+			fprintf(stderr, "Could not resize the image: %s\n", extra_info);
+
+			break;
+		case ERR_THUMB:
+			fprintf(stderr, "Could not create thumbnail for image: %s\n", extra_info);
+
+			break;
+		case ERR_WATER:
+			fprintf(stderr, "Could not add watermark to the image: %s\n", extra_info);
 
 			break;
 		default:

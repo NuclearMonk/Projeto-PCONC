@@ -3,18 +3,19 @@
  * MEEC 21/22
  *
  * Projecto - Parte1
- *                           serial-simples.c
+ *                           serial-complexo.c
  *
- * Compilacao: gcc serial-simples -o serial-simples -lgd
+ * Compilacao: gcc serial-complexo -o serial-complex -lgd
  *
  *****************************************************************************/
-#include <gd.h>
+
+#include "gd.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <stdio.h>
 
-/* the directories where output files will be placed */
+/* the directories wher output files will be placed */
 #define RESIZE_DIR "./Resize/"
 #define THUMB_DIR "./Thumbnail/"
 #define WATER_DIR "./Watermark/"
@@ -151,7 +152,7 @@ gdImagePtr read_png_file(char * file_name){
 	gdImagePtr read_img;
 
 	fp = fopen(file_name, "rb");
-   	if (!fp) {
+   	if (NULL == fp) {
         fprintf(stderr, "Can't read image %s\n", file_name);
         return NULL;
     }
@@ -262,17 +263,18 @@ int main(){
 		exit(-1);
 	}
 
-	/*  iteration over all the files */
+	/* 1st iteration over all the files
+	 * To resize images
+	 */
 	for (int i = 0; i < nn_files; i++){
-		printf("file %s\n", files[i]);
 
-	    /* load of the input file */
+		printf("resize %s\n", files[i]);
+		/* load of the input file */
 	    in_img = read_png_file(files[i]);
 		if (in_img == NULL){
 			fprintf(stderr, "Impossible to read %s image\n", files[i]);
 			continue;
 		}
-
 		/* resizes of each image */
 		out_resized_img = resize_image(in_img, 640);
   		if (out_resized_img == NULL) {
@@ -284,6 +286,22 @@ int main(){
 	            fprintf(stderr, "Impossible to write %s image\n", out_file_name);
 			}
 			gdImageDestroy(out_resized_img);
+		}
+		gdImageDestroy(in_img);
+	}
+
+
+	/* 2nd iteration over all the files
+	 * To create the thumbnails
+	 */
+	for (int i = 0; i < nn_files; i++){
+
+	   	printf("thumbnail %s\n", files[i]);
+		/* load of the input file */
+	    in_img = read_png_file(files[i]);
+		if (in_img == NULL){
+			fprintf(stderr, "Impossible to read %s image\n", files[i]);
+			continue;
 		}
 
 		/* creation of thumbnail image */
@@ -298,6 +316,22 @@ int main(){
 			}
 			gdImageDestroy(out_thumb_img);
 		}
+		gdImageDestroy(in_img);
+
+	}
+
+	/* 3rd iteration over all the files
+	 * To add the watermarks
+	 */
+	for (int i = 0; i < nn_files; i++){
+
+	    printf("watermark  %s\n", files[i]);
+		/* load of the input file */
+	    in_img = read_png_file(files[i]);
+		if (in_img == NULL){
+			fprintf(stderr, "Impossible to read %s image\n", files[i]);
+			continue;
+		}
 
 		/* add watermark */
 		out_watermark_img = add_watermark(in_img, watermark_img);
@@ -311,11 +345,11 @@ int main(){
 			}
 			gdImageDestroy(out_watermark_img);
 		}
-
-
 		gdImageDestroy(in_img);
+
 	}
 
 	gdImageDestroy(watermark_img);
 	exit(0);
 }
+

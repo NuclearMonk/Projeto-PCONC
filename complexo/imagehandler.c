@@ -109,6 +109,31 @@ void *process_image_set_3(void *args)
 	return NULL;
 }
 
+<<<<<<< HEAD
+=======
+gdImagePtr * create_image_array(int file_count){
+	gdImagePtr* array = (gdImagePtr*)malloc(file_count * sizeof(gdImagePtr));
+	if(NULL == array){
+		help(ALLOCATION_FAIL,NULL);
+		exit(EXIT_FAILURE);
+	}
+	for (int i = 0; i < file_count; i++)
+	{
+		array[i]= NULL;
+	}
+	return array;
+}
+
+
+void free_all_images(gdImagePtr* images, int image_count){
+	for (int i = 0; i < image_count; i++)
+	{
+		gdImageDestroy(images[i]);
+	}
+	free(images);
+}
+
+>>>>>>> image_arrays
 
 gdImagePtr read_png_file(char *imgs_path, char *img_name)
 {
@@ -142,7 +167,7 @@ gdImagePtr read_png_file(char *imgs_path, char *img_name)
 	return read_img;
 }
 
-image_set *create_image_set(char *imgs_path, char **array, unsigned int array_length,
+image_set *create_image_set(char *imgs_path, char **array,gdImagePtr * image_array, unsigned int array_length,
 							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark)
 {
 	image_set *img_set = (image_set *)malloc(sizeof(image_set));
@@ -155,6 +180,7 @@ image_set *create_image_set(char *imgs_path, char **array, unsigned int array_le
 
 	img_set->imgs_path = imgs_path;
 	img_set->filenames_array = array;
+	img_set->image_array = image_array;
 	img_set->array_length = array_length;
 	img_set->start_index = start_index;
 	img_set->thread_count = thread_count;

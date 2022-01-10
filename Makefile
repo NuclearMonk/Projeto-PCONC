@@ -1,8 +1,8 @@
 paralelo-simples:
-	cd simples && make
+	cd simples && make all
 
 paralelo-complexo:
-	cd complexo && make
+	cd complexo && make all
 
 test-simples:
 	rm -r -f Images/Small/Resize;\

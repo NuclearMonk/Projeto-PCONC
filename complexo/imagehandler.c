@@ -25,7 +25,7 @@ struct ImageSet{
 };
 
 
-void *process_image_set(void *args)
+void *process_image_set_1(void *args)
 {
 	image_set *set = (image_set *)args;
 	gdImagePtr image = NULL, out_image = NULL;
@@ -39,11 +39,30 @@ void *process_image_set(void *args)
 		}
 
 		out_image = resize_image(image, 640);
+		gdImageDestroy(image);
 		if (NULL == out_image) {
 			help(ERR_RESIZE, set->filenames_array[i]);
 		} else {
 			save_image(out_image, set->imgs_path, RESIZE_DIR, set->filenames_array[i]);
 			gdImageDestroy(out_image);
+		}
+	}
+
+	free(args);
+
+	return NULL;
+}
+void *process_image_set_2(void *args)
+{
+	image_set *set = (image_set *)args;
+	gdImagePtr image = NULL, out_image = NULL;
+	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
+	{
+		printf("%s\n", set->filenames_array[i]);
+		image = read_png_file(set->imgs_path, set->filenames_array[i]);
+		if (NULL == image)
+		{
+			continue;
 		}
 
 		out_image = thumb_image(image, 640);
@@ -52,6 +71,26 @@ void *process_image_set(void *args)
 		} else {
 			save_image(out_image, set->imgs_path, THUMB_DIR, set->filenames_array[i]);
 			gdImageDestroy(out_image);
+		}
+
+		gdImageDestroy(image);
+	}
+
+	free(args);
+
+	return NULL;
+}
+void *process_image_set_3(void *args)
+{
+	image_set *set = (image_set *)args;
+	gdImagePtr image = NULL, out_image = NULL;
+	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
+	{
+		printf("%s\n", set->filenames_array[i]);
+		image = read_png_file(set->imgs_path, set->filenames_array[i]);
+		if (NULL == image)
+		{
+			continue;
 		}
 
 		out_image = add_watermark(image, set->watermark);
@@ -68,27 +107,6 @@ void *process_image_set(void *args)
 	free(args);
 
 	return NULL;
-}
-
-gdImagePtr* read_all_png_files(char* imgs_path,char** filenames,int file_count){
-	gdImagePtr* array = (gdImagePtr*)malloc(file_count * sizeof(gdImagePtr));
-	if(NULL == array){
-		help(ALLOCATION_FAIL,NULL);
-		exit(EXIT_FAILURE);
-	}
-	for (int i = 0; i < file_count; i++)
-	{
-		array[i]= read_png_file(imgs_path,filenames[i]);
-	}
-	return array;
-}
-
-void free_all_images(gdImagePtr* images, int image_count){
-	for (int i = 0; i < image_count; i++)
-	{
-		gdImageDestroy(images[i]);
-	}
-	free(images);
 }
 
 
@@ -139,7 +157,7 @@ image_set *create_image_set(char *imgs_path, char **array, unsigned int array_le
 	img_set->filenames_array = array;
 	img_set->array_length = array_length;
 	img_set->start_index = start_index;
-	img_set->thread_count = thread_count; 
+	img_set->thread_count = thread_count;
 	img_set->watermark = watermark;
 
 	return img_set;

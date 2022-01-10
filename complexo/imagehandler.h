@@ -31,8 +31,8 @@ image_set *create_image_set(char *imgs_path, char **array, unsigned int array_le
 
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param imgs_path the path to the target directory
  * @param filenames an array filled with the filenames of the files to be opened
  * @param file_count the number of entries in the filenames array
@@ -42,7 +42,7 @@ gdImagePtr * read_all_png_files(char* imgs_path,char** filenames, int file_count
 
 /**
  * @brief Frees an array of images
- * 
+ *
  * @param images the array of images
  * @param image_count the number of entries in the array
  */
@@ -70,7 +70,23 @@ gdImagePtr read_png_file(char *imgs_path, char *file_name) __attribute__((nonnul
  *
  * @return nada
  */
-void *process_image_set(void *args) __attribute__((nonnull));
+void *process_image_set_1(void *args) __attribute__((nonnull));
+
+/**
+ * Read process_image_set_1()'s documentation.
+ *
+ * @param args
+ * @return
+ */
+void *process_image_set_2(void *args) __attribute__((nonnull));
+
+/**
+ * Read process_image_set_1()'s documentation.
+ *
+ * @param args
+ * @return
+ */
+void *process_image_set_3(void *args) __attribute__((nonnull));
 
 /**
  * @brief Resizes an image

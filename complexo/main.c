@@ -62,15 +62,31 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	for (int i = 0; i < max_threads; ++i)
-	{
-		pthread_create(&(threads[i]), NULL, process_image_set,
+	///////////////////////////////////////////////////
+	for (int i = 0; i < max_threads; ++i) {
+		pthread_create(&(threads[i]), NULL, process_image_set_1,
 					   create_image_set(base_path, input_files_names, input_files_count, i, max_threads, watermark));
 	}
-	for (int i = 0; i < max_threads; ++i)
-	{
+	for (int i = 0; i < max_threads; ++i) {
 		pthread_join(threads[i], NULL);
 	}
+
+	for (int i = 0; i < max_threads; ++i) {
+		pthread_create(&(threads[i]), NULL, process_image_set_2,
+					   create_image_set(base_path, input_files_names, input_files_count, i, max_threads, watermark));
+	}
+	for (int i = 0; i < max_threads; ++i) {
+		pthread_join(threads[i], NULL);
+	}
+
+	for (int i = 0; i < max_threads; ++i) {
+		pthread_create(&(threads[i]), NULL, process_image_set_3,
+					   create_image_set(base_path, input_files_names, input_files_count, i, max_threads, watermark));
+	}
+	for (int i = 0; i < max_threads; ++i) {
+		pthread_join(threads[i], NULL);
+	}
+	///////////////////////////////////////////////////
 
 	for (int i = 0; i < input_files_count; ++i)
 	{

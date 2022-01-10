@@ -59,13 +59,17 @@ int main(int argc, char *argv[]){
 		gdImageDestroy(watermark);
 		free(input_files_names);
 		free(threads);
+
 		return EXIT_FAILURE;
 	}
+
+	///////////////////////////////////////////////////
 	gdImagePtr * image_array = create_image_array(input_files_count);
-	image_set** thread_data = (image_set**)malloc(max_threads*sizeof(image_set*)); 
+	image_set** thread_data = (image_set**)malloc(max_threads*sizeof(image_set*));
 	for (int i = 0; i < max_threads; ++i)
-	{	
-		thread_data[i] = create_image_set(base_path, input_files_names,image_array,input_files_count, i, max_threads, watermark);
+	{
+		thread_data[i] = create_image_set(base_path, input_files_names,image_array,input_files_count, i, max_threads,
+										  watermark);
 		pthread_create(&(threads[i]), NULL, process_image_set_1,thread_data[i]);
 	}
 	for (int i = 0; i < max_threads; ++i) {

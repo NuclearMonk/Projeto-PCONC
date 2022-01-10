@@ -24,6 +24,10 @@ struct ImageSet{
 	gdImagePtr watermark;
 };
 
+static gdImagePtr resize_image(gdImagePtr in_img, int new_width) __attribute__((nonnull));
+static void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char *img_name) __attribute__((nonnull));
+static gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark) __attribute__((nonnull, returns_nonnull));
+static gdImagePtr thumb_image(gdImagePtr in_img, int size) __attribute__((nonnull));
 
 void *process_image_set_1(void *args)
 {
@@ -178,7 +182,15 @@ image_set *create_image_set(char *imgs_path, char **array,gdImagePtr * image_arr
 	return img_set;
 }
 
-gdImagePtr resize_image(gdImagePtr in_img, int new_width)
+/**
+ * @brief Resizes an image
+ *
+ * @param in_img a pointer to a gdImage to be resized
+ * @param new_width the new width to change the image
+ *
+ * @return gdImagePtr the new image, NULL if the scaling failed
+ */
+static gdImagePtr resize_image(gdImagePtr in_img, int new_width)
 {
 
 	gdImagePtr out_img = NULL;
@@ -198,7 +210,15 @@ gdImagePtr resize_image(gdImagePtr in_img, int new_width)
 	return out_img;
 }
 
-gdImagePtr thumb_image(gdImagePtr in_img, int size)
+/**
+ * @brief Returns a scalled and cropped to square shape version of the provided image
+ *
+ * @param in_img
+ * @param size
+ *
+ * @return gdImagePtr the output image
+ */
+static gdImagePtr thumb_image(gdImagePtr in_img, int size)
 {
 	gdImagePtr out_img = NULL, aux_img = NULL;
 
@@ -244,7 +264,14 @@ gdImagePtr thumb_image(gdImagePtr in_img, int size)
 	return out_img;
 }
 
-void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char *img_name)
+/**
+ * @brief Saves an image o the specified imgs_path and file
+ *
+ * @param image the gdImage to save
+ * @param img_final_path the imgs_path to the destination imgs_path
+ * @param filename the final filename
+ */
+static void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char *img_name)
 {
 	char *out_file = imgPathGenerator(img_final_path, subdirectory, img_name);
 	FILE *fp = fopen(out_file, "w");
@@ -259,7 +286,15 @@ void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char
 	fclose(fp);
 }
 
-gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark){
+/**
+ * @brief Additively adds a watermark to the image
+ *
+ * @param in_img
+ * @param watermark
+ *
+ * @return gdImagePtr
+ */
+static gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark){
 
 	gdImagePtr out_img = NULL;
 

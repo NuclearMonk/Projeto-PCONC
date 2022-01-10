@@ -64,7 +64,7 @@ void help(int error_id, char *extra_info)
 
 			break;
 		default:
-			fprintf(stderr, "Unkown Error\n");
+			fprintf(stderr, "Unknown Error\n");
 
 			exit(EXIT_FAILURE);
 	}

@@ -109,8 +109,6 @@ void *process_image_set_3(void *args)
 	return NULL;
 }
 
-<<<<<<< HEAD
-=======
 gdImagePtr * create_image_array(int file_count){
 	gdImagePtr* array = (gdImagePtr*)malloc(file_count * sizeof(gdImagePtr));
 	if(NULL == array){
@@ -133,7 +131,6 @@ void free_all_images(gdImagePtr* images, int image_count){
 	free(images);
 }
 
->>>>>>> image_arrays
 
 gdImagePtr read_png_file(char *imgs_path, char *img_name)
 {

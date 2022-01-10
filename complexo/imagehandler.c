@@ -28,18 +28,17 @@ struct ImageSet{
 void *process_image_set_1(void *args)
 {
 	image_set *set = (image_set *)args;
-	gdImagePtr image = NULL, out_image = NULL;
+	gdImagePtr out_image = NULL;
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
 		printf("%s\n", set->filenames_array[i]);
-		image = read_png_file(set->imgs_path, set->filenames_array[i]);
-		if (NULL == image)
+		set->image_array[i]= read_png_file(set->imgs_path, set->filenames_array[i]);
+		if (NULL == set->image_array[i])
 		{
 			continue;
 		}
 
-		out_image = resize_image(image, 640);
-		gdImageDestroy(image);
+		out_image = resize_image(set->image_array[i], 640);
 		if (NULL == out_image) {
 			help(ERR_RESIZE, set->filenames_array[i]);
 		} else {
@@ -47,9 +46,6 @@ void *process_image_set_1(void *args)
 			gdImageDestroy(out_image);
 		}
 	}
-
-	free(args);
-
 	return NULL;
 }
 void *process_image_set_2(void *args)
@@ -59,7 +55,7 @@ void *process_image_set_2(void *args)
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
 		printf("%s\n", set->filenames_array[i]);
-		image = read_png_file(set->imgs_path, set->filenames_array[i]);
+		image = set->image_array[i];
 		if (NULL == image)
 		{
 			continue;
@@ -72,14 +68,10 @@ void *process_image_set_2(void *args)
 			save_image(out_image, set->imgs_path, THUMB_DIR, set->filenames_array[i]);
 			gdImageDestroy(out_image);
 		}
-
-		gdImageDestroy(image);
 	}
-
-	free(args);
-
 	return NULL;
 }
+
 void *process_image_set_3(void *args)
 {
 	image_set *set = (image_set *)args;
@@ -87,7 +79,7 @@ void *process_image_set_3(void *args)
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
 		printf("%s\n", set->filenames_array[i]);
-		image = read_png_file(set->imgs_path, set->filenames_array[i]);
+		image = set->image_array[i];
 		if (NULL == image)
 		{
 			continue;

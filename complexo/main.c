@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
 	max_threads = atoi(argv[2]) ;
 	max_threads = max_threads<0 ? INT_MAX : max_threads;
 	input_files_count = list_pngs(base_path, &input_files_names);
+	gdImagePtr * image_array = create_image_array(input_files_count);
 	if (0 == input_files_count)
 	{
 		help(NO_FILES_FOUND, NULL);
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
 	for (int i = 0; i < max_threads; ++i)
 	{
 		pthread_create(&(threads[i]), NULL, process_image_set,
-					   create_image_set(base_path, input_files_names, input_files_count, i, max_threads, watermark));
+					   create_image_set(base_path, input_files_names,image_array,input_files_count, i, max_threads, watermark));
 	}
 	for (int i = 0; i < max_threads; ++i)
 	{

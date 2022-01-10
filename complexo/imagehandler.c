@@ -139,7 +139,7 @@ image_set *create_image_set(char *imgs_path, char **array, unsigned int array_le
 	img_set->filenames_array = array;
 	img_set->array_length = array_length;
 	img_set->start_index = start_index;
-	img_set->thread_count = thread_count;
+	img_set->thread_count = thread_count; 
 	img_set->watermark = watermark;
 
 	return img_set;

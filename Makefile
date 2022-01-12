@@ -11,3 +11,11 @@ test-simples:
 	cd simples;\
 	make;\
 	make teste;
+
+test-complexo:
+	rm -r -f Images/Small/Resize;\
+	rm -r -f Images/Small/Thumbnail;\
+	rm -r -f Images/Small/Watermark;\
+	cd complexo;\
+	make;\
+	make teste;

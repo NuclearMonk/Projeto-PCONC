@@ -21,6 +21,8 @@ struct ImageSet{
 	unsigned int start_index;
 	unsigned int thread_count;
 	gdImagePtr watermark;
+	timer_data * thread_timers;
+	timer_data * image_timers;
 };
 
 
@@ -28,8 +30,10 @@ void *process_image_set(void *args)
 {
 	image_set *set = (image_set *)args;
 	gdImagePtr image = NULL, out_image = NULL;
+	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].start));
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
+		clock_gettime(CLOCK_REALTIME, &(set->image_timers[i].start));
 		printf("%s\n", set->filenames_array[i]);
 		image = read_png_file(set->imgs_path, set->filenames_array[i]);
 		if (NULL == image)
@@ -62,10 +66,10 @@ void *process_image_set(void *args)
 		}
 
 		gdImageDestroy(image);
+		clock_gettime(CLOCK_REALTIME, &(set->image_timers[i].end));
 	}
-
+	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].end));
 	free(args);
-
 	return NULL;
 }
 
@@ -102,7 +106,7 @@ gdImagePtr read_png_file(char *imgs_path, char *img_name)
 }
 
 image_set *create_image_set(char *imgs_path, char **array, unsigned int array_length,
-							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark)
+							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark, timer_data* thread_timers,timer_data* image_timers)
 {
 	image_set *img_set = (image_set *)malloc(sizeof(image_set));
 	if (NULL == img_set)
@@ -118,6 +122,9 @@ image_set *create_image_set(char *imgs_path, char **array, unsigned int array_le
 	img_set->start_index = start_index;
 	img_set->thread_count = thread_count;
 	img_set->watermark = watermark;
+	img_set->thread_timers= thread_timers;
+	img_set->image_timers= image_timers;
+
 
 	return img_set;
 }

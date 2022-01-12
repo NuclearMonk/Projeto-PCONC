@@ -14,8 +14,10 @@
 #include <string.h>
 #include <pthread.h>
 #include "help.h"
+#include <time.h>
 #include "filehandler.h"
 #include "imagehandler.h"
+#include "stats.h"
 #pragma endregion
 
 int main(int argc, char *argv[])
@@ -25,12 +27,12 @@ int main(int argc, char *argv[])
 
 		return EXIT_FAILURE;
 	}
-
+	timer_data timer;
 	int input_files_count = 0;
 	char **input_files_names = NULL;
 	int max_threads = 0;
 	char *base_path = (char *)malloc((strlen(argv[1]) + 1) * sizeof(char));
-
+	clock_gettime(CLOCK_REALTIME, &(timer.start));
 	strcpy(base_path, argv[1]);
 	printf("Imgs path: %s\n", base_path);
 
@@ -61,26 +63,40 @@ int main(int argc, char *argv[])
 
 		return EXIT_FAILURE;
 	}
-
+	timer_data* thread_timers = ALLOCATE_TIMERS(max_threads)
+	timer_data* image_timers = ALLOCATE_TIMERS(input_files_count)
 	for (int i = 0; i < max_threads; ++i)
 	{
 		pthread_create(&(threads[i]), NULL, process_image_set,
-					   create_image_set(base_path, input_files_names, input_files_count, i, max_threads, watermark));
+					   create_image_set(base_path, input_files_names, input_files_count, i, max_threads, watermark,thread_timers,image_timers));
 	}
 	for (int i = 0; i < max_threads; ++i)
 	{
 		pthread_join(threads[i], NULL);
 	}
 
-	for (int i = 0; i < input_files_count; ++i)
-	{
-		free(input_files_names[i]);
-	}
 
 	free(base_path);
 	gdImageDestroy(watermark);
-	free(input_files_names);
-	free(threads);
 
+	free(threads);
+	clock_gettime(CLOCK_REALTIME, &(timer.end));
+	FILE * fp = fopen("stats.csv","w");
+	fprintf(fp,"name,start time,end time\n");
+	for (int i = 0; i < input_files_count; i++)
+	{
+		fprintf(fp,"%s,%ld.%ld,%ld.%ld\n",input_files_names[i],image_timers[i].start.tv_sec,image_timers[i].start.tv_nsec,image_timers[i].end.tv_sec,image_timers[i].end.tv_nsec);
+		free(input_files_names[i]);
+	}
+	free(input_files_names);
+	for (int i = 0; i < max_threads; i++)
+	{
+		fprintf(fp,"Thread %d,%ld.%ld,%ld.%ld\n",i,thread_timers[i].start.tv_sec,thread_timers[i].start.tv_nsec,thread_timers[i].end.tv_sec,thread_timers[i].end.tv_nsec);
+	}
+
+	free(image_timers);
+	free(thread_timers);
+	fprintf(fp,"Total,%ld.%ld,%ld.%ld\n",timer.start.tv_sec,timer.start.tv_nsec,timer.end.tv_sec,timer.end.tv_nsec);
+	fclose(fp);
 	return 0;
 }

@@ -13,10 +13,12 @@
 #include <limits.h>
 #include <string.h>
 #include <pthread.h>
+#include <time.h>
 #include "help.h"
 #include "filehandler.h"
 #include "imagehandler.h"
 #pragma endregion
+
 
 int main(int argc, char *argv[])
 {
@@ -25,12 +27,14 @@ int main(int argc, char *argv[])
 
 		return EXIT_FAILURE;
 	}
-
+	struct timespec timeStart,timeStop;
+	
 	int input_files_count = 0;
 	char **input_files_names = NULL;
 	int max_threads = 0;
 	char *base_path = (char *)malloc((strlen(argv[1]) + 1) * sizeof(char));
-
+	
+	clock_gettime(CLOCK_REALTIME,&timeStart);
 	strcpy(base_path, argv[1]);
 	printf("Imgs path: %s\n", base_path);
 
@@ -81,6 +85,7 @@ int main(int argc, char *argv[])
 	gdImageDestroy(watermark);
 	free(input_files_names);
 	free(threads);
-
+	clock_gettime(CLOCK_REALTIME,&timeStop);
+	printf("start:%ld.%ld\nend:%ld.%ld\n",timeStart.tv_sec,timeStart.tv_nsec,timeStop.tv_sec,timeStop.tv_nsec);
 	return 0;
 }

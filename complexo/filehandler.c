@@ -19,6 +19,9 @@
 #include <unistd.h>
 #include "help.h"
 
+static bool imgExistsInOutputDirs(char *imgs_path, char* img_file_name) __attribute__((nonnull(1,2)));
+static bool create_directory(char *path) __attribute__((nonnull));
+
 int list_pngs(char *imgs_path, char ***img_names)
 {
 	char img_name[256];
@@ -87,7 +90,15 @@ int list_pngs(char *imgs_path, char ***img_names)
 	return filecount;
 }
 
-bool imgExistsInOutputDirs(char *imgs_path, char *img_file_name)
+/**
+ * @brief Checks if an image file exists already in the 3 output directories
+ *
+ * @param imgs_path the main program path
+ * @param img_file_name the name of the file image, including extension
+ *
+ * @return true if the file exists in all the directories, false otherwise
+ */
+static bool imgExistsInOutputDirs(char *imgs_path, char *img_file_name)
 {
 	char *img_file_path = imgPathGenerator(imgs_path, RESIZE_DIR, img_file_name);
 	bool file_exists = (0 == access(img_file_path, F_OK)) ? true : false;
@@ -116,7 +127,14 @@ bool imgExistsInOutputDirs(char *imgs_path, char *img_file_name)
 	return true;
 }
 
-bool create_directory(char *path)
+/**
+ * @brief Checks if a given directory exists, if it doesn't it creates it
+ *
+ * @param path string with the target directory path
+ *
+ * @return true if the directory exists, false if the creation of the directory failed
+ */
+static bool create_directory(char *path)
 {
 	DIR *dir = opendir(path);
 	if (NULL == dir)

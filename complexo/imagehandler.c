@@ -24,26 +24,45 @@ struct ImageSet{
 	gdImagePtr watermark;
 };
 
+static gdImagePtr resize_image(gdImagePtr in_img, int new_width) __attribute__((nonnull));
+static void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char *img_name) __attribute__((nonnull));
+static gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark) __attribute__((nonnull, returns_nonnull));
+static gdImagePtr thumb_image(gdImagePtr in_img, int size) __attribute__((nonnull));
 
-void *process_image_set(void *args)
+void *process_image_set_1(void *args)
+{
+	image_set *set = (image_set *)args;
+	gdImagePtr out_image = NULL;
+	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
+	{
+		printf("%s\n", set->filenames_array[i]);
+		set->image_array[i]= read_png_file(set->imgs_path, set->filenames_array[i]);
+		if (NULL == set->image_array[i])
+		{
+			continue;
+		}
+
+		out_image = resize_image(set->image_array[i], 640);
+		if (NULL == out_image) {
+			help(ERR_RESIZE, set->filenames_array[i]);
+		} else {
+			save_image(out_image, set->imgs_path, RESIZE_DIR, set->filenames_array[i]);
+			gdImageDestroy(out_image);
+		}
+	}
+	return NULL;
+}
+void *process_image_set_2(void *args)
 {
 	image_set *set = (image_set *)args;
 	gdImagePtr image = NULL, out_image = NULL;
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
 		printf("%s\n", set->filenames_array[i]);
-		image = read_png_file(set->imgs_path, set->filenames_array[i]);
+		image = set->image_array[i];
 		if (NULL == image)
 		{
 			continue;
-		}
-
-		out_image = resize_image(image, 640);
-		if (NULL == out_image) {
-			help(ERR_RESIZE, set->filenames_array[i]);
-		} else {
-			save_image(out_image, set->imgs_path, RESIZE_DIR, set->filenames_array[i]);
-			gdImageDestroy(out_image);
 		}
 
 		out_image = thumb_image(image, 640);
@@ -52,6 +71,22 @@ void *process_image_set(void *args)
 		} else {
 			save_image(out_image, set->imgs_path, THUMB_DIR, set->filenames_array[i]);
 			gdImageDestroy(out_image);
+		}
+	}
+	return NULL;
+}
+
+void *process_image_set_3(void *args)
+{
+	image_set *set = (image_set *)args;
+	gdImagePtr image = NULL, out_image = NULL;
+	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
+	{
+		printf("%s\n", set->filenames_array[i]);
+		image = set->image_array[i];
+		if (NULL == image)
+		{
+			continue;
 		}
 
 		out_image = add_watermark(image, set->watermark);
@@ -70,7 +105,7 @@ void *process_image_set(void *args)
 	return NULL;
 }
 
-gdImagePtr* read_all_png_files(char* imgs_path,char** filenames,int file_count){
+gdImagePtr * create_image_array(int file_count){
 	gdImagePtr* array = (gdImagePtr*)malloc(file_count * sizeof(gdImagePtr));
 	if(NULL == array){
 		help(ALLOCATION_FAIL,NULL);
@@ -78,10 +113,11 @@ gdImagePtr* read_all_png_files(char* imgs_path,char** filenames,int file_count){
 	}
 	for (int i = 0; i < file_count; i++)
 	{
-		array[i]= read_png_file(imgs_path,filenames[i]);
+		array[i]= NULL;
 	}
 	return array;
 }
+
 
 void free_all_images(gdImagePtr* images, int image_count){
 	for (int i = 0; i < image_count; i++)
@@ -124,7 +160,7 @@ gdImagePtr read_png_file(char *imgs_path, char *img_name)
 	return read_img;
 }
 
-image_set *create_image_set(char *imgs_path, char **array, unsigned int array_length,
+image_set *create_image_set(char *imgs_path, char **array,gdImagePtr * image_array, unsigned int array_length,
 							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark)
 {
 	image_set *img_set = (image_set *)malloc(sizeof(image_set));
@@ -137,6 +173,7 @@ image_set *create_image_set(char *imgs_path, char **array, unsigned int array_le
 
 	img_set->imgs_path = imgs_path;
 	img_set->filenames_array = array;
+	img_set->image_array = image_array;
 	img_set->array_length = array_length;
 	img_set->start_index = start_index;
 	img_set->thread_count = thread_count;
@@ -145,7 +182,15 @@ image_set *create_image_set(char *imgs_path, char **array, unsigned int array_le
 	return img_set;
 }
 
-gdImagePtr resize_image(gdImagePtr in_img, int new_width)
+/**
+ * @brief Resizes an image
+ *
+ * @param in_img a pointer to a gdImage to be resized
+ * @param new_width the new width to change the image
+ *
+ * @return gdImagePtr the new image, NULL if the scaling failed
+ */
+static gdImagePtr resize_image(gdImagePtr in_img, int new_width)
 {
 
 	gdImagePtr out_img = NULL;
@@ -165,7 +210,15 @@ gdImagePtr resize_image(gdImagePtr in_img, int new_width)
 	return out_img;
 }
 
-gdImagePtr thumb_image(gdImagePtr in_img, int size)
+/**
+ * @brief Returns a scalled and cropped to square shape version of the provided image
+ *
+ * @param in_img
+ * @param size
+ *
+ * @return gdImagePtr the output image
+ */
+static gdImagePtr thumb_image(gdImagePtr in_img, int size)
 {
 	gdImagePtr out_img = NULL, aux_img = NULL;
 
@@ -211,7 +264,14 @@ gdImagePtr thumb_image(gdImagePtr in_img, int size)
 	return out_img;
 }
 
-void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char *img_name)
+/**
+ * @brief Saves an image o the specified imgs_path and file
+ *
+ * @param image the gdImage to save
+ * @param img_final_path the imgs_path to the destination imgs_path
+ * @param filename the final filename
+ */
+static void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char *img_name)
 {
 	char *out_file = imgPathGenerator(img_final_path, subdirectory, img_name);
 	FILE *fp = fopen(out_file, "w");
@@ -226,7 +286,15 @@ void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char
 	fclose(fp);
 }
 
-gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark){
+/**
+ * @brief Additively adds a watermark to the image
+ *
+ * @param in_img
+ * @param watermark
+ *
+ * @return gdImagePtr
+ */
+static gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark){
 
 	gdImagePtr out_img = NULL;
 

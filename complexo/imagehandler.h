@@ -10,6 +10,7 @@
  */
 
 #include <gd.h>
+#include "stats.h"
 
 typedef struct ImageSet image_set;
 
@@ -27,7 +28,7 @@ typedef struct ImageSet image_set;
  * @return image_set* the image_set to be passed to the arguments of the thread
  */
 image_set *create_image_set(char *imgs_path, char **array,gdImagePtr * image_array, unsigned int array_length, unsigned int start_index,
-							unsigned int thread_count, gdImagePtr watermark) __attribute__((nonnull, returns_nonnull));
+							unsigned int thread_count, gdImagePtr watermark,timer_data* thread_timers,timer_data* image_timers) __attribute__((nonnull, returns_nonnull));
 
 
 

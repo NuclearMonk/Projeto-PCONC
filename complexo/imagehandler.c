@@ -14,14 +14,17 @@
 #include "help.h"
 #include "filehandler.h"
 
-struct ImageSet{
+struct ImageSet
+{
 	char *imgs_path;
 	char **filenames_array;
-	gdImagePtr* image_array;
+	gdImagePtr *image_array;
 	unsigned int array_length;
 	unsigned int start_index;
 	unsigned int thread_count;
 	gdImagePtr watermark;
+	timer_data *thread_timers;
+	timer_data *image_timers;
 };
 
 static gdImagePtr resize_image(gdImagePtr in_img, int new_width) __attribute__((nonnull));
@@ -33,31 +36,40 @@ void *process_image_set_1(void *args)
 {
 	image_set *set = (image_set *)args;
 	gdImagePtr out_image = NULL;
+	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].start));
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
+		clock_gettime(CLOCK_REALTIME, &(set->image_timers[i].start));
 		printf("%s\n", set->filenames_array[i]);
-		set->image_array[i]= read_png_file(set->imgs_path, set->filenames_array[i]);
+		set->image_array[i] = read_png_file(set->imgs_path, set->filenames_array[i]);
 		if (NULL == set->image_array[i])
 		{
 			continue;
 		}
 
 		out_image = resize_image(set->image_array[i], 640);
-		if (NULL == out_image) {
+		if (NULL == out_image)
+		{
 			help(ERR_RESIZE, set->filenames_array[i]);
-		} else {
+		}
+		else
+		{
 			save_image(out_image, set->imgs_path, RESIZE_DIR, set->filenames_array[i]);
 			gdImageDestroy(out_image);
 		}
+		clock_gettime(CLOCK_REALTIME, &(set->image_timers[i].end));
 	}
+	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].end));
 	return NULL;
 }
 void *process_image_set_2(void *args)
 {
 	image_set *set = (image_set *)args;
 	gdImagePtr image = NULL, out_image = NULL;
+	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].start));
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
+		clock_gettime(CLOCK_REALTIME, &(set->image_timers[i].start));
 		printf("%s\n", set->filenames_array[i]);
 		image = set->image_array[i];
 		if (NULL == image)
@@ -66,13 +78,18 @@ void *process_image_set_2(void *args)
 		}
 
 		out_image = thumb_image(image, 640);
-		if (NULL == out_image) {
+		if (NULL == out_image)
+		{
 			help(ERR_THUMB, set->filenames_array[i]);
-		} else {
+		}
+		else
+		{
 			save_image(out_image, set->imgs_path, THUMB_DIR, set->filenames_array[i]);
 			gdImageDestroy(out_image);
 		}
+		clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].end));
 	}
+	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].end));
 	return NULL;
 }
 
@@ -80,8 +97,10 @@ void *process_image_set_3(void *args)
 {
 	image_set *set = (image_set *)args;
 	gdImagePtr image = NULL, out_image = NULL;
+	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].start));
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
+		clock_gettime(CLOCK_REALTIME, &(set->image_timers[i].start));
 		printf("%s\n", set->filenames_array[i]);
 		image = set->image_array[i];
 		if (NULL == image)
@@ -90,43 +109,47 @@ void *process_image_set_3(void *args)
 		}
 
 		out_image = add_watermark(image, set->watermark);
-		if (NULL == out_image) {
+		if (NULL == out_image)
+		{
 			help(ERR_WATER, set->filenames_array[i]);
-		} else {
+		}
+		else
+		{
 			save_image(out_image, set->imgs_path, WATER_DIR, set->filenames_array[i]);
 			gdImageDestroy(out_image);
 		}
-
 		gdImageDestroy(image);
+		clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].end));
 	}
-
+	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].end));
 	free(args);
 
 	return NULL;
 }
 
-gdImagePtr * create_image_array(int file_count){
-	gdImagePtr* array = (gdImagePtr*)malloc(file_count * sizeof(gdImagePtr));
-	if(NULL == array){
-		help(ALLOCATION_FAIL,NULL);
+gdImagePtr *create_image_array(int file_count)
+{
+	gdImagePtr *array = (gdImagePtr *)malloc(file_count * sizeof(gdImagePtr));
+	if (NULL == array)
+	{
+		help(ALLOCATION_FAIL, NULL);
 		exit(EXIT_FAILURE);
 	}
 	for (int i = 0; i < file_count; i++)
 	{
-		array[i]= NULL;
+		array[i] = NULL;
 	}
 	return array;
 }
 
-
-void free_all_images(gdImagePtr* images, int image_count){
+void free_all_images(gdImagePtr *images, int image_count)
+{
 	for (int i = 0; i < image_count; i++)
 	{
 		gdImageDestroy(images[i]);
 	}
 	free(images);
 }
-
 
 gdImagePtr read_png_file(char *imgs_path, char *img_name)
 {
@@ -160,8 +183,8 @@ gdImagePtr read_png_file(char *imgs_path, char *img_name)
 	return read_img;
 }
 
-image_set *create_image_set(char *imgs_path, char **array,gdImagePtr * image_array, unsigned int array_length,
-							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark)
+image_set *create_image_set(char *imgs_path, char **array, gdImagePtr *image_array, unsigned int array_length,
+							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark, timer_data *thread_timers, timer_data *image_timers)
 {
 	image_set *img_set = (image_set *)malloc(sizeof(image_set));
 	if (NULL == img_set)
@@ -178,6 +201,8 @@ image_set *create_image_set(char *imgs_path, char **array,gdImagePtr * image_arr
 	img_set->start_index = start_index;
 	img_set->thread_count = thread_count;
 	img_set->watermark = watermark;
+	img_set->thread_timers = thread_timers;
+	img_set->image_timers = image_timers;
 
 	return img_set;
 }
@@ -294,7 +319,8 @@ static void save_image(gdImagePtr image, char *img_final_path, char *subdirector
  *
  * @return gdImagePtr
  */
-static gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark){
+static gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark)
+{
 
 	gdImagePtr out_img = NULL;
 
@@ -303,7 +329,7 @@ static gdImagePtr add_watermark(gdImagePtr in_img, gdImagePtr watermark){
 	width = watermark->sx;
 	height = watermark->sy;
 
-	out_img =  gdImageClone (in_img);
+	out_img = gdImageClone(in_img);
 
 	gdImageCopy(out_img, watermark, 0, 0, 0, 0, width, height);
 

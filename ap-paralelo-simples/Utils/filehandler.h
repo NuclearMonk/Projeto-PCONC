@@ -12,16 +12,15 @@
 #ifndef PROJETO_PCONC_FILEHANDLER_H
 #define PROJETO_PCONC_FILEHANDLER_H
 
-#include <stdbool.h>
-
 #define RESIZE_DIR "Resize/"
 #define THUMB_DIR "Thumbnail/"
 #define WATER_DIR "Watermark/"
 
 /**
  * @brief Lists all PNG files in a directory.
- * Dado o string para um imgs_path retorna o numero de ficheiros png dentro desse imgs_path, retorna tambem um
- * filenames_array com os nomes desses ficheiros
+ * Given an images files path, this function looks for a file named "img-process-list.txt" file in which every line has
+ * a file image name (with extension), and returns the number of files found, also filling an array (allocated
+ * internally) with the names of the files found.
  *
  * @param imgs_path the path of the images to explore
  * @param img_names a pointer (initialized to NULL) to a char** array where to store the image file names

@@ -19,6 +19,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
+#include "stdbool.h"
 #pragma endregion
 
 #define FREE_MEMORY {fcloseNew(stats_csv_file);\

@@ -25,7 +25,7 @@
 #define FREE_MEMORY {fcloseNew(stats_csv_file);\
 	freeNew(image_timers);\
 	freeNew(thread_timers);\
-	gdImageDestroy(watermark);\
+	if(NULL!=watermark){gdImageDestroy(watermark);}\
 	watermark = NULL;\
 	freeNew(threads);\
 	if (NULL != input_files_names) {for (int i = 0; i < input_files_count; ++i) {freeNew(input_files_names[i]);}}\
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	}
 
 	int max_threads = atoi(argv[2]);
-	if (max_threads < 0 || max_threads > input_files_count) {
+	if (max_threads <= 0 || max_threads > input_files_count) {
 		max_threads = input_files_count;
 	}
 	printf("using %d Threads\n", max_threads);

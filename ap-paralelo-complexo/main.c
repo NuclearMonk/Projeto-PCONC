@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	}
 
 	int max_threads = atoi(argv[2]);
-	if (max_threads < 0 || max_threads > input_files_count) {
+	if (max_threads <= 0 || max_threads > input_files_count) {
 		max_threads = input_files_count;
 	}
 	printf("Using %d Threads\n", max_threads);

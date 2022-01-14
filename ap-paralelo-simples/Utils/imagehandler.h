@@ -15,7 +15,7 @@
 #include <gd.h>
 #include "stats.h"
 
-// This is the parameter to the thread functions.
+// Struct to be passed to the threads, abstraction could be made better, ¯\_(ツ)_/¯ Too Bad!
 typedef struct ThreadParams image_set;
 struct ThreadParams{
 	char *imgs_path;

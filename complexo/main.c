@@ -136,7 +136,8 @@ int main(int argc, char *argv[])
 	/////////////////////////////////////////////////////////////
 
 	clock_gettime(CLOCK_REALTIME, &(timer.end));
-	fprintf(stats_csv_file, "Total,%ld.%ld,%ld.%ld\n", timer.start.tv_sec, timer.start.tv_nsec, timer.end.tv_sec, timer.end.tv_nsec);
+	fprintf(stats_csv_file, "Total,%ld.%ld,%ld.%ld\n", timer.start.tv_sec, timer.start.tv_nsec, timer.end.tv_sec,
+			timer.end.tv_nsec);
 
 	// Main freeNew() calls
 	// Labels for all errors to come to and this way we don't need to remember to free things all over the place.

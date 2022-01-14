@@ -102,17 +102,20 @@ int main(int argc, char *argv[])
 	fprintf(stats_csv_file, "Thread no.,start time,end time\n");
 	for (int i = 0; i < max_threads; ++i)
 	{
-		fprintf(stats_csv_file,"Thread %d,%ld.%ld,%ld.%ld\n",i,thread_timers[i].start.tv_sec,thread_timers[i].start.tv_nsec,thread_timers[i].end.tv_sec,thread_timers[i].end.tv_nsec);
+		fprintf(stats_csv_file,"Thread %d,%ld.%ld,%ld.%ld\n", i, thread_timers[i].start.tv_sec,
+				thread_timers[i].start.tv_nsec, thread_timers[i].end.tv_sec, thread_timers[i].end.tv_nsec);
 	}
 	fprintf(stats_csv_file, "File name,start time,end time\n"); \
 	for (int i = 0; i < input_files_count; ++i)
 	{
-		fprintf(stats_csv_file,"%s,%ld.%ld,%ld.%ld\n",input_files_names[i],image_timers[i].start.tv_sec,image_timers[i].start.tv_nsec,image_timers[i].end.tv_sec,image_timers[i].end.tv_nsec);
+		fprintf(stats_csv_file,"%s,%ld.%ld,%ld.%ld\n", input_files_names[i], image_timers[i].start.tv_sec,
+				image_timers[i].start.tv_nsec,image_timers[i].end.tv_sec,image_timers[i].end.tv_nsec);
 	}
 	/////////////////////////////////////////////////////////////
 
 	clock_gettime(CLOCK_REALTIME, &(timer.end));
-	fprintf(stats_csv_file,"Total,%ld.%ld,%ld.%ld\n",timer.start.tv_sec,timer.start.tv_nsec,timer.end.tv_sec,timer.end.tv_nsec);
+	fprintf(stats_csv_file,"Total,%ld.%ld,%ld.%ld\n", timer.start.tv_sec, timer.start.tv_nsec, timer.end.tv_sec,
+			timer.end.tv_nsec);
 
 	// Main freeNew() calls
 	// Labels for all errors to come to and this way we don't need to remember to free things all over the place.

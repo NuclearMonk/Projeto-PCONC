@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include "help.h"
 #include "filehandler.h"
-#include "utils.h"
+#include "general.h"
 
 inline gdImagePtr *create_image_array(int size)
 {

@@ -1,20 +1,21 @@
 /******************************************************************************
  * Programação Concorrente
- * MEEC 2021/2022
+ * LEEC 2021/2022
  *
- * Projecto - Parte 1
- *                           ap-complexo-simples.c
+ * Projeto - Parte 1
+ * 		Paralelo simples
  *
- * Compilacao: make ap-complexo-simples
- * Author: Manuel Soares, Eduardo Faustino
+ * Compilação: make paralelo-simples
+ * Autores:
+ * - Eduardo Faustino, Nº 102298
+ * - Manuel Soares, Nº ????????
  *****************************************************************************/
 #pragma region INCLUDES
-#include "../help.h"
-#include "../filehandler.h"
-#include "../imagehandler.h"
-#include "../utils.h"
+#include "Utils/help.h"
+#include "Utils/filehandler.h"
+#include "Utils/imagehandler.h"
+#include "Utils/general.h"
 #include <gd.h>
-#include <limits.h>
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
@@ -32,9 +33,9 @@ int main(int argc, char *argv[])
 	}
 	int ret_var = EXIT_SUCCESS;
 
-	printf("Running paralelo-simples.");
+	printf("----- Running ap-paralelo-simples -----");
 
-	// Variables to deallocate in the end
+	// Things to deallocate in the end
 	char *base_path = NULL;
 	char **input_files_names = NULL;
 	pthread_t *threads = NULL;
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
 	gdImagePtr watermark = NULL;
 	char *stats_csv_path = NULL;
 	FILE *stats_csv_file = NULL;
-	// Variables to deallocate in the end
+	// Things to deallocate in the end
 
 	timer_data timer;
 	clock_gettime(CLOCK_REALTIME, &(timer.start));
@@ -60,9 +61,10 @@ int main(int argc, char *argv[])
 		goto endMain;
 	}
 
-	int arg2_num_threads = atoi(argv[2]);
-	int max_threads = arg2_num_threads < 0 ? INT_MAX :
-					  (arg2_num_threads < input_files_count ? arg2_num_threads : input_files_count);
+	int max_threads = atoi(argv[2]);
+	if (max_threads < 0 || max_threads > input_files_count) {
+		max_threads = input_files_count;
+	}
 	printf("using %d Threads\n", max_threads);
 	create_output_directories(base_path);
 
@@ -113,6 +115,7 @@ int main(int argc, char *argv[])
 	}
 	/////////////////////////////////////////////////////////////
 
+	fprintf(stats_csv_file, "\n");
 	clock_gettime(CLOCK_REALTIME, &(timer.end));
 	fprintf(stats_csv_file,"Total,%ld.%ld,%ld.%ld\n", timer.start.tv_sec, timer.start.tv_nsec, timer.end.tv_sec,
 			timer.end.tv_nsec);
@@ -139,18 +142,20 @@ int main(int argc, char *argv[])
 
 /**
  * @brief Thread function.
- * Each thread executes the necessary transformations over a set of given 'filename_array's, beginning in the position
- * corresponding to its thread ID, and jumping 'threadcount' images each time.
- * This is done like this to reduce the discrepancies of work between the threads such that no thread works more than
- * any other (preferably - if the number of images to process cannot divide the number of threads, there will be at
- * least one thread with more work than the others).
  *
  * @param args a pointer to a struct of type image_set
  *
- * @return nothing
+ * @return NULL
  */
 static void *process_image_set(void *args)
 {
+	// Explanation of how the thread works:
+	// Each thread executes the necessary transformations over a set of given 'filename_array's, beginning in the position
+	// corresponding to its thread ID, and jumping 'threadcount' images each time.
+	//	This is done like this to reduce the discrepancies of work between the threads such that no thread works more than
+	// any other (preferably - if the number of images to process cannot divide the number of threads, there will be at
+	// least one thread with more work than the others).
+
 	image_set *set = (image_set *)args;
 
 	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].start));

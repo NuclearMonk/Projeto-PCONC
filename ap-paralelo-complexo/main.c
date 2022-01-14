@@ -1,20 +1,21 @@
 /******************************************************************************
- * Programacao Concorrente
- * MEEC 2021/2022
+ * Programação Concorrente
+ * LEEC 2021/2022
  *
- * Projecto - Parte 1
- *                           ap-complexo-simples.c
+ * Projeto - Parte 1
+ * 		Paralelo complexo
  *
- * Compilacao: make ap-complexo-simples
- * Author: MAnuel Soares, Eduardo Faustino
+ * Compilação: make paralelo-complexo
+ * Autores:
+ * - Eduardo Faustino, Nº 102298
+ * - Manuel Soares, Nº ????????
  *****************************************************************************/
 #pragma region INCLUDES
-#include "../help.h"
-#include "../filehandler.h"
-#include "../imagehandler.h"
-#include "../utils.h"
+#include "Utils/help.h"
+#include "Utils/filehandler.h"
+#include "Utils/imagehandler.h"
+#include "Utils/general.h"
 #include <gd.h>
-#include <limits.h>
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
@@ -50,9 +51,9 @@ int main(int argc, char *argv[])
 	}
 	int ret_var = EXIT_SUCCESS;
 
-	printf("Running paralelo-complexo.");
+	printf("----- Running ap-paralelo-complexo -----");
 
-	// Variables to deallocate in the end
+	// Things to deallocate in the end
 	char *base_path = NULL;
 	char **input_files_names = NULL;
 	pthread_t *threads = NULL;
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
 	gdImagePtr watermark = NULL;
 	char *stats_csv_path = NULL;
 	FILE *stats_csv_file = NULL;
-	// Variables to deallocate in the end
+	// Things to deallocate in the end
 
 	timer_data timer;
 	clock_gettime(CLOCK_REALTIME, &(timer.start));
@@ -80,9 +81,10 @@ int main(int argc, char *argv[])
 		goto endMain;
 	}
 
-	int arg2_num_threads = atoi(argv[2]);
-	int max_threads = arg2_num_threads < 0 ? INT_MAX :
-			(arg2_num_threads < input_files_count ? arg2_num_threads : input_files_count);
+	int max_threads = atoi(argv[2]);
+	if (max_threads < 0 || max_threads > input_files_count) {
+		max_threads = input_files_count;
+	}
 	printf("Using %d Threads\n", max_threads);
 	create_output_directories(base_path);
 
@@ -111,7 +113,7 @@ int main(int argc, char *argv[])
 	}
 
 	/////////////////////////////////////////////////////////////
-	// Start the threads for the resize operation.
+	// Threads for the resize operation.
 	for (int i = 0; i < max_threads; ++i) {
 		thread_data[i] = create_image_set(base_path, input_files_names, image_array, input_files_count, i, max_threads,
 										  watermark, thread_timers, image_timers);
@@ -120,14 +122,14 @@ int main(int argc, char *argv[])
 	fprintf(stats_csv_file, "----- Resize operation -----\n");
 	joinAndWriteFile(false)
 
-	// Start the threads for the thumbnail insertion operation.
+	// Threads for the thumbnail insertion operation.
 	for (int i = 0; i < max_threads; ++i) {
 		pthread_create(&(threads[i]), NULL, process_image_set_thumb, thread_data[i]);
 	}
 	fprintf(stats_csv_file, "----- Thumbnail operation -----\n");
 	joinAndWriteFile(false)
 
-	// Start the threads for the watermark insertion operation.
+	// Threads for the watermark insertion operation.
 	for (int i = 0; i < max_threads; ++i) {
 		pthread_create(&(threads[i]), NULL, process_image_set_watermark, thread_data[i]);
 	}
@@ -135,6 +137,7 @@ int main(int argc, char *argv[])
 	joinAndWriteFile(true)
 	/////////////////////////////////////////////////////////////
 
+	fprintf(stats_csv_file, "\n");
 	clock_gettime(CLOCK_REALTIME, &(timer.end));
 	fprintf(stats_csv_file, "Total,%ld.%ld,%ld.%ld\n", timer.start.tv_sec, timer.start.tv_nsec, timer.end.tv_sec,
 			timer.end.tv_nsec);
@@ -161,17 +164,20 @@ int main(int argc, char *argv[])
 	return ret_var;
 }
 
+//////////////////////////////////////////////////////
+// Explanation of how the threads work:
+// Each thread executes the necessary transformations over a set of given 'filename_array's, beginning in the position
+// corresponding to its thread ID, and jumping 'threadcount' images each time.
+//	This is done like this to reduce the discrepancies of work between the threads such that no thread works more than
+// any other (preferably - if the number of images to process cannot divide the number of threads, there will be at
+// least one thread with more work than the others).
+
 /**
- * @brief Thread function.
- * Each thread executes the necessary transformations over a set of given 'filename_array's, beginning in the position
- * corresponding to its thread ID, and jumping 'threadcount' images each time.
- * This is done like this to reduce the discrepancies of work between the threads such that no thread works more than
- * any other (preferably - if the number of images to process cannot divide the number of threads, there will be at
- * least one thread with more work than the others).
+ * @brief Thread function to do the resize operation.
  *
  * @param args a pointer to a struct of type image_set
  *
- * @return nada
+ * @return NULL
  */
 static void *process_image_set_resize(void *args)
 {
@@ -204,10 +210,11 @@ static void *process_image_set_resize(void *args)
 }
 
 /**
- * Read process_image_set_resize()'s documentation.
+ * @brief Thread function to do the thumbnail insertion operation.
  *
- * @param args
- * @return
+ * @param args a pointer to a struct of type image_set
+ *
+ * @return NULL
  */
 static void *process_image_set_thumb(void *args)
 {
@@ -244,10 +251,11 @@ static void *process_image_set_thumb(void *args)
 }
 
 /**
- * Read process_image_set_resize()'s documentation.
+ * @brief Thread function to do the watermark insertion operation.
  *
- * @param args
- * @return
+ * @param args a pointer to a struct of type image_set
+ *
+ * @return NULL
  */
 static void *process_image_set_watermark(void *args)
 {

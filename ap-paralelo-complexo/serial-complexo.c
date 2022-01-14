@@ -1,6 +1,6 @@
 /******************************************************************************
  * Programacao Concorrente
- * MEEC 21/22
+ * LEEC 21/22
  *
  * Projecto - Parte1
  *                           serial-complexo.c

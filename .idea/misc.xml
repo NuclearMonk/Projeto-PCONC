@@ -2,8 +2,8 @@
 <project version="4">
   <component name="CidrRootsConfiguration">
     <sourceRoots>
-      <file path="$PROJECT_DIR$/complexo" />
-      <file path="$PROJECT_DIR$/simples" />
+      <file path="$PROJECT_DIR$/ap-paralelo-complexo" />
+      <file path="$PROJECT_DIR$/ap-paralelo-simples" />
     </sourceRoots>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />

@@ -1,16 +1,15 @@
 .vscode
 
 # Pastas de imagens geradas
-Resize
-Thumbnail
-Watermark
+Resize/
+Thumbnail/
+Watermark/
 
 # Executáveis
-paralelo-simples
-paralelo-complexo
+*.elf
 
-# Todas as imagens
-*.png
+# A pasta das imagens
+Images/
 
 # Os ficheiros de estatísticas
 *.csv

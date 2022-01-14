@@ -18,7 +18,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include "help.h"
-#include "utils.h"
+#include "general.h"
 
 static inline bool imgExistsInOutputDirs(char *imgs_path, char* img_file_name) __attribute__((nonnull));
 static inline bool create_directory(char *dir_path) __attribute__((nonnull));

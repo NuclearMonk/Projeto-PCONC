@@ -7,6 +7,4 @@ Instruções de build:
 `make`
 
 Running
-`serial-simples`
-`serial-complexo`
 `ap-paralelo-complexo TARGET_DIRECTORY MAX_THREADS`

@@ -30,7 +30,7 @@ inline int list_pngs(char *imgs_path, char ***img_names) {
 	freeNew(imgs_file_path);
 	if (NULL == file) {
 		help(FILE_NOT_FOUND, NULL);
-
+		free(imgs_path);
 		exit(EXIT_FAILURE);
 	}
 

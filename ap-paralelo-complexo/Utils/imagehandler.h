@@ -15,7 +15,7 @@
 #include <gd.h>
 #include "stats.h"
 
-// This is the parameter to the thread functions.
+// This is the parameter to the thread functions.could be better abstracted but we couldn't bother
 typedef struct ThreadParams image_set;
 struct ThreadParams{
 	char *imgs_path;

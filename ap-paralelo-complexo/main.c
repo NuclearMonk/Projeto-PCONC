@@ -21,6 +21,18 @@
 #include <time.h>
 #pragma endregion
 
+#define FREE_MEMORY {fcloseNew(stats_csv_file);\
+	freeNew(image_timers);\
+	freeNew(thread_timers);\
+	freeNew(thread_data);\
+	if(NULL!=watermark){gdImageDestroy(watermark);}\
+	watermark = NULL;\
+	freeNew(threads);\
+	freeNew(image_array);\
+	if (NULL != input_files_names) {for (int i = 0; i < input_files_count; ++i) {freeNew(input_files_names[i]);}}\
+	freeNew(input_files_names);\
+	freeNew(base_path);}
+
 #define joinAndWriteFile(free_data) \
 	fprintf(stats_csv_file, "Thread no.,start time,end time\n"); \
 	for (int i = 0; i < max_threads; ++i) { \
@@ -53,7 +65,7 @@ int main(int argc, char *argv[])
 
 	printf("----- Running ap-paralelo-complexo -----");
 
-	// Things to deallocate in the end
+	/* Things to deallocate in the end */
 	char *base_path = NULL;
 	char **input_files_names = NULL;
 	pthread_t *threads = NULL;
@@ -64,7 +76,7 @@ int main(int argc, char *argv[])
 	gdImagePtr watermark = NULL;
 	char *stats_csv_path = NULL;
 	FILE *stats_csv_file = NULL;
-	// Things to deallocate in the end
+	/***********************************/
 
 	timer_data timer;
 	clock_gettime(CLOCK_REALTIME, &(timer.start));
@@ -77,8 +89,8 @@ int main(int argc, char *argv[])
 	if (0 == input_files_count) {
 		help(NO_FILES_FOUND, NULL);
 		ret_var = EXIT_FAILURE;
-
-		goto endMain;
+		FREE_MEMORY
+		return ret_var;
 	}
 
 	int max_threads = atoi(argv[2]);
@@ -99,7 +111,8 @@ int main(int argc, char *argv[])
 		help(ALLOCATION_FAIL, "sdlfkj");
 		ret_var = EXIT_FAILURE;
 
-		goto endMain;
+		FREE_MEMORY
+		return ret_var;
 	}
 
 	stats_csv_path = img_path_generator(base_path, "", "stats.csv");
@@ -109,7 +122,8 @@ int main(int argc, char *argv[])
 		help(FILE_WRITE_FAIL, "stats.csv");
 		ret_var = EXIT_FAILURE;
 
-		goto endMain;
+		FREE_MEMORY
+		return ret_var;
 	}
 
 	/////////////////////////////////////////////////////////////
@@ -142,25 +156,7 @@ int main(int argc, char *argv[])
 	fprintf(stats_csv_file, "Total,%ld.%ld,%ld.%ld\n", timer.start.tv_sec, timer.start.tv_nsec, timer.end.tv_sec,
 			timer.end.tv_nsec);
 
-	// Main freeNew() calls
-	// Labels for all errors to come to and this way we don't need to remember to free things all over the place.
-	endMain:
-	fcloseNew(stats_csv_file);
-	freeNew(image_timers);
-	freeNew(image_array);
-	freeNew(thread_timers);
-	freeNew(thread_data);
-	gdImageDestroy(watermark);
-	watermark = NULL;
-	freeNew(threads);
-	if (NULL != input_files_names) {
-		for (int i = 0; i < input_files_count; ++i) {
-			freeNew(input_files_names[i]);
-		}
-	}
-	freeNew(input_files_names);
-	freeNew(base_path);
-
+	FREE_MEMORY
 	return ret_var;
 }
 

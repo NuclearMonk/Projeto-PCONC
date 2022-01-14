@@ -19,7 +19,7 @@ inline void help(int error_id, char *extra_info)
 	{
 		case INVALID_ARGS:
 			fprintf(stderr, "Invalid Arguments\nProper Argument usage is\n./ap-complexo-simples TARGER_DIRECTORY MAX_THREADS\n");
-
+			
 			break;
 		case FILE_NOT_FOUND:
 			fprintf(stderr, "Target File Not Found\n");
@@ -62,7 +62,7 @@ inline void help(int error_id, char *extra_info)
 
 			break;
 		default:
-			fprintf(stderr, "Unknown Error\n");
+			fprintf(stderr, "How did we end up here\nMy guess is a programmer made a big oopsie\n ¯\\_(ツ)_/¯\n");
 
 			break;
 	}

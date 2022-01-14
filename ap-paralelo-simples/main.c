@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
 		ret_var = EXIT_FAILURE;
 
 		FREE_MEMORY
+		return ret_var;
 	}
 
 	stats_csv_path = img_path_generator(base_path, "", "stats.csv");

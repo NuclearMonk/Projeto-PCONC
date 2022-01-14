@@ -9,6 +9,9 @@
  *
  */
 
+#ifndef PROJETO_PCONC_HELP_H
+#define PROJETO_PCONC_HELP_H
+
 #pragma region ERROR CODES
 #define INVALID_ARGS 1
 #define FILE_NOT_FOUND 2
@@ -31,3 +34,5 @@
  * @param extra_info information that will be printed depending on error_id
  */
 void help(int error_id, char *extra_info);
+
+#endif //PROJETO_PCONC_HELP_H

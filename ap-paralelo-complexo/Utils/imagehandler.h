@@ -9,6 +9,9 @@
  *
  */
 
+#ifndef PROJETO_PCONC_IMAGEHANDLER_H
+#define PROJETO_PCONC_IMAGEHANDLER_H
+
 #include <gd.h>
 #include "stats.h"
 
@@ -100,3 +103,5 @@ gdImagePtr add_watermark(gdImagePtr original_img, gdImagePtr watermark) __attrib
  * @return a pointer to the array
  */
 gdImagePtr *create_image_array(int size);
+
+#endif //PROJETO_PCONC_IMAGEHANDLER_H

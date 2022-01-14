@@ -1,5 +1,5 @@
-#ifndef STATS_H
-#define STATS_H
+#ifndef PROJETO_PCONC_STATS_H
+#define PROJETO_PCONC_STATS_H
 
 #include <time.h>
 typedef struct TimeData{
@@ -9,4 +9,4 @@ typedef struct TimeData{
 
 #define ALLOCATE_TIMERS(size) (timer_data *) malloc(size * sizeof(timer_data))
 
-#endif //STATS_H
+#endif //PROJETO_PCONC_STATS_H

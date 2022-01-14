@@ -9,6 +9,9 @@
  *
  */
 
+#ifndef PROJETO_PCONC_FILEHANDLER_H
+#define PROJETO_PCONC_FILEHANDLER_H
+
 #include <stdbool.h>
 
 #define RESIZE_DIR "Resize/"
@@ -45,3 +48,5 @@ void create_output_directories(char *output_path) __attribute__((nonnull));
  * @return the full file path
  */
 char *img_path_generator(char *imgs_path, char *subdirectory, char *img_name) __attribute__((nonnull));
+
+#endif //PROJETO_PCONC_FILEHANDLER_H

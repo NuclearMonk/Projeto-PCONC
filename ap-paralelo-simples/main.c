@@ -2,7 +2,7 @@
  * Programação Concorrente
  * LEEC 2021/2022
  *
- * Projeto - Parte 1
+ * Projeto - Parte A
  * 		Paralelo simples
  *
  * Compilação: make paralelo-simples

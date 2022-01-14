@@ -6,7 +6,11 @@ Thumbnail
 Watermark
 
 # Executáveis
-ap-paralelo-*
+paralelo-simples
+paralelo-complexo
 
 # Todas as imagens
 *.png
+
+# Os ficheiros de estatísticas
+*.csv

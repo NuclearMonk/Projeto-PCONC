@@ -350,6 +350,6 @@ int main(){
 	}
 
 	gdImageDestroy(watermark_img);
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 

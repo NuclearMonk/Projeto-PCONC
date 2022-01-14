@@ -20,13 +20,14 @@
 #define ERR_RESIZE 9
 #define ERR_THUMB 10
 #define ERR_WATER 11
+#define ERR_WRITING_CSV 12
 #pragma endregion
 
 
 /**
  * @brief Throws an error and exits the program
  *
- * @param error_id Error codes defined in by macro at the top of this file
- * @param extra_info info that will be printed depending on error_id
+ * @param error_id error codes defined in help.h
+ * @param extra_info information that will be printed depending on error_id
  */
 void help(int error_id, char *extra_info);

@@ -13,13 +13,7 @@
 #include "stdlib.h"
 #include <stdio.h>
 
-/**
- * @brief Throws an error
- *
- *
- * @param error_id Error codes defined in by macro at the top of this file
- */
-void help(int error_id, char *extra_info)
+inline void help(int error_id, char *extra_info)
 {
 	switch (error_id)
 	{
@@ -63,9 +57,13 @@ void help(int error_id, char *extra_info)
 			fprintf(stderr, "Could not add watermark to the image: %s\n", extra_info);
 
 			break;
+		case ERR_WRITING_CSV:
+			fprintf(stderr, "Could not write the CSV file successfully\n");
+
+			break;
 		default:
 			fprintf(stderr, "Unknown Error\n");
 
-			exit(EXIT_FAILURE);
+			break;
 	}
 }

@@ -8,7 +8,7 @@
  * Compilação: make paralelo-complexo
  * Autores:
  * - Eduardo Faustino, Nº 102298
- * - Manuel Soares, Nº ????????
+ * - Manuel Soares, Nº 96267
  *****************************************************************************/
 #pragma region INCLUDES
 #include "Utils/help.h"

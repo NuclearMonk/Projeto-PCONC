@@ -15,20 +15,20 @@
 #include <gd.h>
 #include "stats.h"
 
-// Struct to be passed to the threads, abstraction could be made better, ¯\_(ツ)_/¯ Too Bad!
-typedef struct ThreadParams image_set;  //TODO Rename this shit
-struct ThreadParams
-{
+// This is the parameter to the thread functions.could be better abstracted but we couldn't bother
+typedef struct ThreadParams image_set;
+struct ThreadParams{
 	char *imgs_path;
-	char **filenames_array;	   /*substituid por um pipe*/
-	gdImagePtr *image_array;   /*Not Needed*/
-	unsigned int array_length; /*Not Needed*/
-	unsigned int start_index;  /*Not Needed*/
-	unsigned int thread_count; /*Not Needed*/
+	char **filenames_array;
+	gdImagePtr *image_array;
+	unsigned int array_length;
+	unsigned int start_index;
+	unsigned int thread_count;
 	gdImagePtr watermark;
-	timer_data *thread_timers; /* pode ser`substituido  por um char * com toda a informacao retornado aquando do pthread join*/
+	timer_data *thread_timers;
 	timer_data *image_timers;
 };
+
 
 /**
  * @brief Create a image set object
@@ -44,7 +44,7 @@ struct ThreadParams
  */
 image_set *create_image_set(char *imgs_path, char **array, gdImagePtr *image_array, unsigned int array_length,
 							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark,
-							timer_data *thread_timers, timer_data *image_timers); // __attribute__((nonnull));
+							timer_data *thread_timers, timer_data *image_timers);// __attribute__((nonnull));
 
 /**
  * @brief reads a png file to a gdImage

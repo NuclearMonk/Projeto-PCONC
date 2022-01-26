@@ -1,0 +1,26 @@
+Ideias para segunda parte
+
+ap-paralelo-dinamico
+
+ler o numero de threads
+ler o com o nome das imagens
+criar os 3 tipos de threads, passando o apenas um ponteiro para o respetivo pipe
+
+main
+criar 3 copias dos nomes das imagens com 3 mallocs
+colocar cada copia num dos pipes (write do char*)
+libertar os char*
+
+
+no thread
+    LOOP
+    ler o char* do pipe
+    abrir a imagem
+    aplicar transformacoes
+    escrever imagem
+    ENDLOOP
+
+COMO CARALHO É QUE FAZEMOS PARA FAZERMOS OS THREADS TERMINAREM QUANDO JA NAO HOUVER MAIS IMAGENS
+IDEIAS ??
+    MANUEL- podemos colocar NULL x vezes no pipe sendo x o numero de de threads, quando um thread lê null da return, isto faz com que cada thread so leia um null e todos saiam permitindo um pthread join
+    

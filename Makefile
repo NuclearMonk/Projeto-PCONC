@@ -4,6 +4,9 @@ simples:
 complexo:
 	cd ap-paralelo-complexo && make complexo
 
+dinamico:
+	cd ap-paralelo-dinamico && make dinamico
+
 test-simples:
 	rm -r -f Images/Small/Resize;\
 	rm -r -f Images/Small/Thumbnail;\

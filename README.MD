@@ -4,7 +4,9 @@
 ### 96267 Manuel Soares, 102298 Eduardo Faustino
 
 Instruções de build:
-`make`
+`make simples`
+`make complexo`
 
 Running
 `ap-paralelo-complexo TARGET_DIRECTORY MAX_THREADS`
+`ap-paralelo-simples TARGET_DIRECTORY MAX_THREADS`

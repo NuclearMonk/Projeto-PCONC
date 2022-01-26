@@ -3,7 +3,7 @@ flags = -std=c99 -g -O3 -funroll-loops -Wall -Wextra -Werror=pedantic -Werror=fo
 libs = -pthread -lgd
 
 complexo: main.o filehandler.o imagehandler.o help.o
-	${CC} ${flags} -o ap-paralelo-complexo.elf main.o filehandler.o imagehandler.o help.o ${libs};
+	${CC} ${flags} -o ap-paralelo-complexo main.o filehandler.o imagehandler.o help.o ${libs};
 	make clean;
 
 main.o: main.c

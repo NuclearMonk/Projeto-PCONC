@@ -15,20 +15,15 @@
 #include <gd.h>
 #include "stats.h"
 
-// This is the parameter to the thread functions.could be better abstracted but we couldn't bother
-typedef struct ThreadParams image_set;
-struct ThreadParams{
+typedef struct ThreadParams thread_args;
+struct ThreadParams
+{
+	int thread_id;
 	char *imgs_path;
-	char **filenames_array;
-	gdImagePtr *image_array;
-	unsigned int array_length;
-	unsigned int start_index;
-	unsigned int thread_count;
+	int*pipe;
 	gdImagePtr watermark;
-	timer_data *thread_timers;
-	timer_data *image_timers;
+	int* ret_pipe;
 };
-
 
 /**
  * @brief Create a image set object
@@ -40,11 +35,9 @@ struct ThreadParams{
  * @param thread_count the number of avaiable threads doing the task
  * @param watermark the image to be used as the watermark
  *
- * @return image_set* the image_set to be passed to the arguments of the thread
+ * @return thread_args* the thread_args to be passed to the arguments of the thread
  */
-image_set *create_image_set(char *imgs_path, char **array, gdImagePtr *image_array, unsigned int array_length,
-							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark,
-							timer_data *thread_timers, timer_data *image_timers);// __attribute__((nonnull));
+thread_args *create_thread_args(int thread_id, char *imgs_path, int* pipe, gdImagePtr watermark,int* ret_pipe); // __attribute__((nonnull));
 
 /**
  * @brief reads a png file to a gdImage
@@ -95,13 +88,5 @@ void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char
  */
 gdImagePtr add_watermark(gdImagePtr original_img, gdImagePtr watermark) __attribute__((nonnull));
 
-/**
- * @brief Creates an array of images with all values initialized to NULL.
- *
- * @param size the size of the array
- *
- * @return a pointer to the array
- */
-gdImagePtr *create_image_array(int size);
 
 #endif //PROJETO_PCONC_IMAGEHANDLER_H

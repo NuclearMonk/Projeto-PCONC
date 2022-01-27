@@ -15,21 +15,8 @@
 #include "filehandler.h"
 #include "general.h"
 
-inline gdImagePtr *create_image_array(int size)
-{
-	// Calloc is needed here, don't remove it.
-	gdImagePtr *array = (gdImagePtr *) calloc(size, sizeof(gdImagePtr));
-	if (NULL == array)
-	{
-		help(ALLOCATION_FAIL, NULL);
 
-		exit(EXIT_FAILURE);
-	}
-
-	return array;
-}
-
-inline gdImagePtr read_png_file(char *imgs_path, char *img_name)
+gdImagePtr read_png_file(char *imgs_path, char *img_name)
 {
 	char *file = img_path_generator(imgs_path, "", img_name);
 	FILE *fp = fopen(file, "rb");
@@ -56,29 +43,21 @@ inline gdImagePtr read_png_file(char *imgs_path, char *img_name)
 	return read_img;
 }
 
-inline image_set *create_image_set(char *imgs_path, char **array, gdImagePtr *image_array, unsigned int array_length,
-							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark,
-							timer_data *thread_timers, timer_data *image_timers)
+inline thread_args *create_thread_args(int thread_id,char *imgs_path,int* pipe,gdImagePtr watermark,int* ret_pipe)
 {
-	image_set *img_set = (image_set *) malloc(sizeof(image_set));
-	if (NULL == img_set)
+	thread_args *targs = (thread_args *) malloc(sizeof(thread_args));
+	if (NULL == targs)
 	{
 		help(ALLOCATION_FAIL, NULL);
 
 		exit(EXIT_FAILURE);
 	}
-
-	img_set->imgs_path = imgs_path;
-	img_set->filenames_array = array;
-	img_set->image_array = image_array;
-	img_set->array_length = array_length;
-	img_set->start_index = start_index;
-	img_set->thread_count = thread_count;
-	img_set->watermark = watermark;
-	img_set->thread_timers = thread_timers;
-	img_set->image_timers = image_timers;
-
-	return img_set;
+	targs->thread_id= thread_id;
+	targs->imgs_path = imgs_path;
+	targs->pipe=pipe;
+	targs->watermark = watermark;
+	targs->ret_pipe=ret_pipe;
+	return targs;
 }
 
 inline gdImagePtr resize_image(gdImagePtr in_img, int new_width)
@@ -86,7 +65,6 @@ inline gdImagePtr resize_image(gdImagePtr in_img, int new_width)
 
 	gdImagePtr out_img = NULL;
 	int width = 0, height = 0, new_height = 0;
-
 	width = in_img->sx;
 	height = in_img->sy;
 	new_height = new_width * 1.0 / width * height;

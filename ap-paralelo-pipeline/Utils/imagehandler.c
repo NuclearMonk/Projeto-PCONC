@@ -43,35 +43,34 @@ gdImagePtr read_png_file(char *imgs_path, char *img_name)
 	return read_img;
 }
 
-inline thread_args *create_thread_args(int thread_id,char *imgs_path,int* pipe_read,int* pipe_write,gdImagePtr watermark,int* ret_pipe)
+inline ThreadParams *create_ThreadParams(int thread_id, char *imgs_path, int* pipe_read, int* pipe_write,
+										 gdImagePtr watermark, int* ret_pipe)
 {
-	thread_args *targs = (thread_args *) malloc(sizeof(thread_args));
-	if (NULL == targs)
+	ThreadParams *thread_params = (ThreadParams *) malloc(sizeof(ThreadParams));
+	if (NULL == thread_params)
 	{
 		help(ALLOCATION_FAIL, NULL);
 
 		exit(EXIT_FAILURE);
 	}
-	targs->thread_id= thread_id;
-	targs->imgs_path = imgs_path;
-	targs->pipe_read=pipe_read;
-	targs->pipe_write= pipe_write;
-	targs->watermark = watermark;
-	targs->ret_pipe=ret_pipe;
-	return targs;
+	thread_params->thread_id = thread_id;
+	thread_params->imgs_path = imgs_path;
+	thread_params->pipe_read = pipe_read;
+	thread_params->pipe_write = pipe_write;
+	thread_params->watermark = watermark;
+	thread_params->ret_pipe = ret_pipe;
+
+	return thread_params;
 }
 
 inline gdImagePtr resize_image(gdImagePtr in_img, int new_width)
 {
-
-	gdImagePtr out_img = NULL;
-	int width = 0, height = 0, new_height = 0;
-	width = in_img->sx;
-	height = in_img->sy;
-	new_height = new_width * 1.0 / width * height;
+	int width = in_img->sx;
+	int height = in_img->sy;
+	int new_height = new_width * 1.0 / width * height;
 
 	gdImageSetInterpolationMethod(in_img, GD_BILINEAR_FIXED);
-	out_img = gdImageScale(in_img, new_width, new_height);
+	gdImagePtr out_img = gdImageScale(in_img, new_width, new_height);
 	if (NULL == out_img)
 	{
 		return NULL;
@@ -82,14 +81,11 @@ inline gdImagePtr resize_image(gdImagePtr in_img, int new_width)
 
 inline gdImagePtr thumb_image(gdImagePtr in_img, int size)
 {
-	gdImagePtr out_img = NULL, aux_img = NULL;
-
-	int width = 0, height = 0;
 	int new_height = 0, new_width = 0;
 	// Get the image's width and height
 
-	width = in_img->sx;
-	height = in_img->sy;
+	int width = in_img->sx;
+	int height = in_img->sy;
 
 	if (height > width)
 	{
@@ -103,7 +99,7 @@ inline gdImagePtr thumb_image(gdImagePtr in_img, int size)
 	}
 
 	gdImageSetInterpolationMethod(in_img, GD_BILINEAR_FIXED);
-	aux_img = gdImageScale(in_img, new_width, new_height);
+	gdImagePtr aux_img = gdImageScale(in_img, new_width, new_height);
 	if (NULL == aux_img)
 	{
 		return NULL;
@@ -115,7 +111,7 @@ inline gdImagePtr thumb_image(gdImagePtr in_img, int size)
 	crop_area.x = 0;
 	crop_area.y = 0;
 
-	out_img = gdImageCrop(aux_img, &crop_area);
+	gdImagePtr out_img = gdImageCrop(aux_img, &crop_area);
 	gdImageDestroy(aux_img);
 
 	if (NULL == out_img)
@@ -143,14 +139,10 @@ inline void save_image(gdImagePtr image, char *img_final_path, char *subdirector
 
 inline gdImagePtr add_watermark(gdImagePtr original_img, gdImagePtr watermark)
 {
-	gdImagePtr out_img = NULL;
+	int width = watermark->sx;
+	int height = watermark->sy;
 
-	int width = 0, height = 0;
-
-	width = watermark->sx;
-	height = watermark->sy;
-
-	out_img = gdImageClone(original_img);
+	gdImagePtr out_img = gdImageClone(original_img);
 
 	gdImageCopy(out_img, watermark, 0, 0, 0, 0, width, height);
 

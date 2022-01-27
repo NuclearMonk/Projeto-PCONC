@@ -15,16 +15,15 @@
 #include <gd.h>
 #include "stats.h"
 
-typedef struct ThreadParams thread_args;
-struct ThreadParams
+typedef struct
 {
 	int thread_id;
 	char *imgs_path;
-	int* pipe_read;		//pipe where the filenames for images are read
-	int* pipe_write;	//pipe where we write the filenames of the images to be closed
+	int* pipe_read;		// pipe where the filenames for images are read
+	int* pipe_write;	// pipe where we write the filenames of the images to be closed
 	gdImagePtr watermark;
-	int* ret_pipe;		//pipe where we write the timing info and the requests for thread joining
-};
+	int* ret_pipe;		// pipe where we write the timing info and the requests for thread joining
+} ThreadParams;
 
 /**
  * @brief Create a image set object
@@ -36,9 +35,9 @@ struct ThreadParams
  * @param thread_count the number of avaiable threads doing the task
  * @param watermark the image to be used as the watermark
  *
- * @return thread_args* the thread_args to be passed to the arguments of the thread
+ * @return ThreadParams* the ThreadParams to be passed to the arguments of the thread
  */
-thread_args *create_thread_args(int thread_id, char *imgs_path, int* pipe_read,int *pipe_write, gdImagePtr watermark,int* ret_pipe); // __attribute__((nonnull));
+ThreadParams *create_ThreadParams(int thread_id, char *imgs_path, int* pipe_read,int *pipe_write, gdImagePtr watermark,int* ret_pipe); // __attribute__((nonnull));
 
 /**
  * @brief reads a png file to a gdImage

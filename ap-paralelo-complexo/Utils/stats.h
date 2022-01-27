@@ -2,7 +2,7 @@
 #define PROJETO_PCONC_STATS_H
 
 #include <time.h>
-typedef struct TimeData{
+typedef struct TimeData {
     struct timespec start;
     struct timespec end;
 } timer_data;

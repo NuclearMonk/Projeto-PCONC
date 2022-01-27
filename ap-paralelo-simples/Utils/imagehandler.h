@@ -16,19 +16,18 @@
 #include "stats.h"
 
 // Struct to be passed to the threads, abstraction could be made better, ¯\_(ツ)_/¯ Too Bad!
-typedef struct ThreadParams image_set;  //TODO Rename this shit
-struct ThreadParams
+typedef struct
 {
 	char *imgs_path;
-	char **filenames_array;	   
-	gdImagePtr *image_array;   
-	unsigned int array_length; 
-	unsigned int start_index;  
+	char **filenames_array;
+	gdImagePtr *image_array;
+	unsigned int array_length;
+	unsigned int start_index;
 	unsigned int thread_count;
 	gdImagePtr watermark;
 	timer_data *thread_timers;
 	timer_data *image_timers;
-};
+} ThreadParams;
 
 /**
  * @brief Create a image set object
@@ -40,9 +39,9 @@ struct ThreadParams
  * @param thread_count the number of avaiable threads doing the task
  * @param watermark the image to be used as the watermark
  *
- * @return image_set* the image_set to be passed to the arguments of the thread
+ * @return ThreadParams* the ThreadParams to be passed to the arguments of the thread
  */
-image_set *create_image_set(char *imgs_path, char **array, gdImagePtr *image_array, unsigned int array_length,
+ThreadParams *create_image_set(char *imgs_path, char **array, gdImagePtr *image_array, unsigned int array_length,
 							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark,
 							timer_data *thread_timers, timer_data *image_timers); // __attribute__((nonnull));
 

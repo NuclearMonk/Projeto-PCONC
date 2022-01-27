@@ -10,7 +10,6 @@
  */
 
 #include "help.h"
-#include "stdlib.h"
 #include <stdio.h>
 
 inline void help(int error_id, char *extra_info)
@@ -19,7 +18,7 @@ inline void help(int error_id, char *extra_info)
 	{
 		case INVALID_ARGS:
 			fprintf(stderr, "Invalid Arguments\nProper Argument usage is\n./ap-complexo-simples TARGER_DIRECTORY MAX_THREADS\n");
-			
+
 			break;
 		case FILE_NOT_FOUND:
 			fprintf(stderr, "Target File Not Found\n");

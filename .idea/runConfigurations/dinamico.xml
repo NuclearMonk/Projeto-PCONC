@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="dinamico" type="CLionNativeAppRunConfigurationType" PROGRAM_PARAMS="$ContentRoot$/Images/Small -1" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" WORKING_DIR="file://$ContentRoot$/ap-paralelo-dinamico" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Projeto-PCONC" TARGET_NAME="dinamico" CONFIG_NAME="dinamico" version="1" RUN_PATH="ap-paralelo-dinamico">
+    <method v="2">
+      <option name="CLION.COMPOUND.BUILD" enabled="true" />
+    </method>
+  </configuration>
+</component>

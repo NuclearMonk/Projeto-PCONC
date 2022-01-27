@@ -19,9 +19,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
-#include <stdbool.h>
 #include <unistd.h>
-#include <errno.h>
 #pragma endregion
 
 #define FREE_MEMORY                                     \
@@ -59,7 +57,7 @@ int main(int argc, char *argv[])
 	int ret_var = EXIT_SUCCESS;
 
 	printf("----- Running ap-paralelo-dinamico -----");
-	/* Things to deallocate in the end */
+	/* Things to free/close in the end */
 	char *base_path = NULL;
 	char **input_files_names = NULL;
 	pthread_t *threads = NULL;
@@ -87,7 +85,7 @@ int main(int argc, char *argv[])
 		return ret_var;
 	}
 	int max_threads = atoi(argv[2]);
-	if (max_threads <= 0 || max_threads > input_files_count)
+	if ((max_threads <= 0) || (max_threads > input_files_count))
 	{
 		max_threads = input_files_count;
 	}
@@ -96,7 +94,7 @@ int main(int argc, char *argv[])
 
 	threads = (pthread_t *)malloc(max_threads * sizeof(pthread_t));
 	watermark = read_png_file(base_path, "watermark.png");
-	if (NULL == watermark || NULL == threads)
+	if ((NULL == watermark) || (NULL == threads))
 	{
 		help(ALLOCATION_FAIL, "sdlfkj");
 		ret_var = EXIT_FAILURE;
@@ -104,16 +102,16 @@ int main(int argc, char *argv[])
 		return ret_var;
 	}
 
-	if (pipe(pipe_w) < 0 || pipe(pipe_r) < 0 || pipe(pipe_t) < 0 || pipe(pipe_threads) < 0)
+	if ((pipe(pipe_w) < 0) || (pipe(pipe_r) < 0) || (pipe(pipe_t) < 0) || (pipe(pipe_threads) < 0))
 	{
 		help(ERR_CREATING_PIPE, NULL);
 		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
 		return ret_var;
 	}
-	for (int i = 0; i < max_threads; i++)
+	for (int i = 0; i < max_threads; ++i)
 	{
-		thread_args *thread_data = create_thread_args(i, base_path, pipe_r, watermark, pipe_threads);
+		ThreadParams *thread_data = create_ThreadParams(i, base_path, pipe_r, watermark, pipe_threads);
 		pthread_create(&(threads[i]), NULL, process_image_set_resize, thread_data);
 	}
 	if (write(pipe_r[1], input_files_names, input_files_count * sizeof(char *)) < 0)
@@ -125,10 +123,7 @@ int main(int argc, char *argv[])
 	}
 	close(pipe_r[1]);
 	int thread_to_close;
-	int i=0;
-	while ((i!=max_threads) && (read(pipe_threads[0], &thread_to_close, sizeof(int)) == sizeof(int)))
-	{
-		i++;
+	for (int i = 0; (i < max_threads) && (sizeof(int) == read(pipe_threads[0], &thread_to_close, sizeof(int))); ++i) {
 		pthread_join(threads[thread_to_close],NULL);
 		printf("closed thread: %d \n",thread_to_close);
 	}
@@ -156,14 +151,14 @@ int main(int argc, char *argv[])
 /**
  * @brief Thread function to do the resize operation.
  *
- * @param args a pointer to a struct of type thread_args
+ * @param args a pointer to a struct of type ThreadParams
  *
  * @return NULL
  */
 static void *process_image_set_resize(void *args)
 {
 	char *filename = NULL;
-	thread_args *targs = (thread_args *)args;
+	ThreadParams *targs = (ThreadParams *)args;
 	while (read(targs->pipe[0], &filename, sizeof(char *)) == sizeof(char *))
 	{
 		printf("thread %d resize: %s\n", targs->thread_id, filename);
@@ -181,30 +176,6 @@ static void *process_image_set_resize(void *args)
 		}
 	}
 	write(targs->ret_pipe[1],&(targs->thread_id),sizeof(int));
-	free(targs);
-	return NULL;
-}
-
-/**
- * @brief Thread function to do the thumbnail insertion operation.
- *
- * @param args a pointer to a struct of type thread_args
- *
- * @return NULL
- */
-static void *process_image_set_thumb(void *args)
-{
-	return NULL;
-}
-
-/**
- * @brief Thread function to do the watermark insertion operation.
- *
- * @param args a pointer to a struct of type thread_args
- *
- * @return NULL
- */
-static void *process_image_set_watermark(void *args)
-{
+	freeNew(targs);
 	return NULL;
 }

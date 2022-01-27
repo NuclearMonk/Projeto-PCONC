@@ -10,7 +10,6 @@
  */
 
 #include "help.h"
-#include "stdlib.h"
 #include <stdio.h>
 
 inline void help(int error_id, char *extra_info)

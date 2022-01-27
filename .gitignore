@@ -6,13 +6,16 @@ Thumbnail/
 Watermark/
 
 # Executáveis
-*.elf
+ap-paralelo-simples/ap-paralelo-simples
+ap-paralelo-complexo/ap-paralelo-complexo
+ap-paralelo-dinamico/ap-paralelo-dinamico
+ap-paralelo-pipeline/ap-paralelo-pipeline
 
 # A pasta das imagens
 Images/
 
 # Os ficheiros de estatísticas
 *.csv
-ap-paralelo-simples/ap-paralelo-simples
-ap-paralelo-simples.zip
-ap-paralelo-dinamico/ap-paralelo-dinamico
+
+# Outros
+*.zip

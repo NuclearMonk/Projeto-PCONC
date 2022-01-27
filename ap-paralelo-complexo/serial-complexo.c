@@ -157,7 +157,7 @@ gdImagePtr read_png_file(char * file_name){
         return NULL;
     }
     read_img = gdImageCreateFromPng(fp);
-    fclose(fp);
+    fcloseNew(fp);
   	if (read_img == NULL) {
     	return NULL;
     }
@@ -184,7 +184,7 @@ int write_png_file(gdImagePtr write_img, char * file_name){
 		return 0;
 	}
 	gdImagePng(write_img, fp);
-	fclose(fp);
+	fcloseNew(fp);
 
 	return 1;
 }

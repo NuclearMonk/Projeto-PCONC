@@ -6,7 +6,9 @@
 Instruções de build:
 `make simples`
 `make complexo`
+`make dinamico`
 
 Running
+`ap-paralelo-dinamico TARGET_DIRECTORY MAX_THREADS`
 `ap-paralelo-complexo TARGET_DIRECTORY MAX_THREADS`
 `ap-paralelo-simples TARGET_DIRECTORY MAX_THREADS`

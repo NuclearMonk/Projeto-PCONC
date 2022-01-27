@@ -2,8 +2,8 @@ CC = gcc
 flags = -std=c99 -g -O3 -funroll-loops -Wall -Wextra -Werror=pedantic -Werror=format=2 -pedantic-errors -Wno-unknown-pragmas
 libs = -pthread -lgd
 
-dinamico: main.o filehandler.o imagehandler.o help.o
-	${CC} ${flags} -o ap-paralelo-dinamico main.o filehandler.o imagehandler.o help.o ${libs};
+pipeline: main.o filehandler.o imagehandler.o help.o
+	${CC} ${flags} -o ap-paralelo-pipeline main.o filehandler.o imagehandler.o help.o ${libs};
 	make clean;
 
 main.o: main.c

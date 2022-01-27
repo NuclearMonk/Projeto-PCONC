@@ -6,3 +6,6 @@ complexo:
 
 dinamico:
 	cd ap-paralelo-dinamico && make dinamico
+
+pipeline:
+	cd ap-paralelo-pipeline && make pipeline

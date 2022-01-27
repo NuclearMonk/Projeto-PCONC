@@ -43,7 +43,7 @@ gdImagePtr read_png_file(char *imgs_path, char *img_name)
 	return read_img;
 }
 
-inline thread_args *create_thread_args(int thread_id,char *imgs_path,int* pipe,gdImagePtr watermark,int* ret_pipe)
+inline thread_args *create_thread_args(int thread_id,char *imgs_path,int* pipe_read,int* pipe_write,gdImagePtr watermark,int* ret_pipe)
 {
 	thread_args *targs = (thread_args *) malloc(sizeof(thread_args));
 	if (NULL == targs)
@@ -54,7 +54,8 @@ inline thread_args *create_thread_args(int thread_id,char *imgs_path,int* pipe,g
 	}
 	targs->thread_id= thread_id;
 	targs->imgs_path = imgs_path;
-	targs->pipe=pipe;
+	targs->pipe_read=pipe_read;
+	targs->pipe_write= pipe_write;
 	targs->watermark = watermark;
 	targs->ret_pipe=ret_pipe;
 	return targs;

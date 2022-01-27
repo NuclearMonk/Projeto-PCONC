@@ -25,7 +25,7 @@
 #define ERR_WATER 11
 #define ERR_WRITING_CSV 12
 #define ERR_CREATING_PIPE 13
-#define ERR_USING_PIPE 13
+#define ERR_USING_PIPE 14
 #pragma endregion
 
 

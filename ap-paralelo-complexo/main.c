@@ -66,12 +66,12 @@ int main(int argc, char *argv[])
 
 	printf("----- Running ap-paralelo-complexo -----");
 
-	/* Things to deallocate in the end */
+	/* Things to free/close in the end */
 	char *base_path = NULL;
 	char **input_files_names = NULL;
 	pthread_t *threads = NULL;
 	gdImagePtr *image_array = NULL;
-	image_set **thread_data = NULL;
+	ThreadParams **thread_data = NULL;
 	timer_data* thread_timers = NULL;
 	timer_data* image_timers = NULL;
 	gdImagePtr watermark = NULL;
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 	thread_timers = ALLOCATE_TIMERS(max_threads);
 	image_timers = ALLOCATE_TIMERS(input_files_count);
 	image_array = create_image_array(input_files_count);
-	thread_data = (image_set **) malloc(max_threads * sizeof(image_set *));
+	thread_data = (ThreadParams **) malloc(max_threads * sizeof(ThreadParams *));
 	watermark = read_png_file(base_path, "watermark.png");
 	if (NULL == image_array || NULL == thread_data || NULL == thread_timers || NULL == image_timers ||
 			NULL == watermark || NULL == threads) {
@@ -172,13 +172,13 @@ int main(int argc, char *argv[])
 /**
  * @brief Thread function to do the resize operation.
  *
- * @param args a pointer to a struct of type image_set
+ * @param args a pointer to a struct of type ThreadParams
  *
  * @return NULL
  */
 static void *process_image_set_resize(void *args)
 {
-	image_set *set = (image_set *) args;
+	ThreadParams *set = (ThreadParams *) args;
 	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].start));
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
@@ -209,13 +209,13 @@ static void *process_image_set_resize(void *args)
 /**
  * @brief Thread function to do the thumbnail insertion operation.
  *
- * @param args a pointer to a struct of type image_set
+ * @param args a pointer to a struct of type ThreadParams
  *
  * @return NULL
  */
 static void *process_image_set_thumb(void *args)
 {
-	image_set *set = (image_set *)args;
+	ThreadParams *set = (ThreadParams *)args;
 	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].start));
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{
@@ -250,13 +250,13 @@ static void *process_image_set_thumb(void *args)
 /**
  * @brief Thread function to do the watermark insertion operation.
  *
- * @param args a pointer to a struct of type image_set
+ * @param args a pointer to a struct of type ThreadParams
  *
  * @return NULL
  */
 static void *process_image_set_watermark(void *args)
 {
-	image_set *set = (image_set *)args;
+	ThreadParams *set = (ThreadParams *)args;
 	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].start));
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
 	{

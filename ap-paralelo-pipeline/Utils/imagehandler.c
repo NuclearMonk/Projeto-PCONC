@@ -15,21 +15,8 @@
 #include "filehandler.h"
 #include "general.h"
 
-inline gdImagePtr *create_image_array(int size)
-{
-	// Calloc is needed here, don't remove it.
-	gdImagePtr *array = (gdImagePtr *) calloc(size, sizeof(gdImagePtr));
-	if (NULL == array)
-	{
-		help(ALLOCATION_FAIL, NULL);
 
-		exit(EXIT_FAILURE);
-	}
-
-	return array;
-}
-
-inline gdImagePtr read_png_file(char *imgs_path, char *img_name)
+gdImagePtr read_png_file(char *imgs_path, char *img_name)
 {
 	char *file = img_path_generator(imgs_path, "", img_name);
 	FILE *fp = fopen(file, "rb");
@@ -56,29 +43,24 @@ inline gdImagePtr read_png_file(char *imgs_path, char *img_name)
 	return read_img;
 }
 
-inline ThreadParams *create_image_set(char *imgs_path, char **array, gdImagePtr *image_array, unsigned int array_length,
-							unsigned int start_index, unsigned int thread_count, gdImagePtr watermark,
-							timer_data *thread_timers, timer_data *image_timers)
+inline ThreadParams *create_ThreadParams(int thread_id, char *imgs_path, int* pipe_read, int* pipe_write,
+										 gdImagePtr watermark, int* ret_pipe)
 {
-	ThreadParams *img_set = (ThreadParams *) malloc(sizeof(ThreadParams));
-	if (NULL == img_set)
+	ThreadParams *thread_params = (ThreadParams *) malloc(sizeof(ThreadParams));
+	if (NULL == thread_params)
 	{
 		help(ALLOCATION_FAIL, NULL);
 
 		exit(EXIT_FAILURE);
 	}
+	thread_params->thread_id = thread_id;
+	thread_params->imgs_path = imgs_path;
+	thread_params->pipe_read = pipe_read;
+	thread_params->pipe_write = pipe_write;
+	thread_params->watermark = watermark;
+	thread_params->ret_pipe = ret_pipe;
 
-	img_set->imgs_path = imgs_path;
-	img_set->filenames_array = array;
-	img_set->image_array = image_array;
-	img_set->array_length = array_length;
-	img_set->start_index = start_index;
-	img_set->thread_count = thread_count;
-	img_set->watermark = watermark;
-	img_set->thread_timers = thread_timers;
-	img_set->image_timers = image_timers;
-
-	return img_set;
+	return thread_params;
 }
 
 inline gdImagePtr resize_image(gdImagePtr in_img, int new_width)

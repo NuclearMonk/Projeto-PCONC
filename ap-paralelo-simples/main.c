@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
 	printf("----- Running ap-paralelo-simples -----\n");
 
-	/*Things to deallocate in the end*/
+	/*Things to free/close in the end*/
 	char *base_path = NULL;
 	char **input_files_names = NULL;
 	pthread_t *threads = NULL;
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 /**
  * @brief Thread function.
  *
- * @param args um poneiro para um sruct do tipo image_set
+ * @param args um poneiro para um sruct do tipo ThreadParams
  *
  * @return NULL
  */
@@ -156,7 +156,7 @@ static void *process_image_set(void *args)
 	 * each thread also writes stats info to thread_timers and image_timers arrays
 	 */
 
-	image_set *set = (image_set *)args;
+	ThreadParams *set = (ThreadParams *)args;
 
 	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].start));
 	for (unsigned int i = set->start_index; i < set->array_length; i += set->thread_count)
@@ -207,7 +207,7 @@ static void *process_image_set(void *args)
 	}
 	clock_gettime(CLOCK_REALTIME, &(set->thread_timers[set->start_index].end));
 
-	free(args);
+	freeNew(args);
 
 	return NULL;
 }

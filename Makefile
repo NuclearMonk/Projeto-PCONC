@@ -19,3 +19,5 @@ zip-submissao: remove-images
 	cd ap-paralelo-complexo && make clean
 	cd ap-paralelo-dinamico && make clean
 	zip -r projeto-pconc ap-paralelo-simples ap-paralelo-complexo ap-paralelo-dinamico Images Makefile README.MD run-teste.py pconcrelatorio-1.pdf 
+pipeline:
+	cd ap-paralelo-pipeline && make pipeline

@@ -22,6 +22,8 @@
 #include <unistd.h>
 #pragma endregion
 
+#define NUM_THREAD_TYPES 3
+
 #define FREE_MEMORY                                     \
 	{                                                   \
 		fcloseNew(stats_csv_file);                      \
@@ -67,7 +69,7 @@ int main(int argc, char *argv[])
 	int pipe_w[2];
 	int pipe_t[2];
 	int pipe_r[2];
-	int pipe_threads[2];
+	int pipe_threads_finalizadas[2];
 	/***********************************/
 
 	timer_data timer;
@@ -84,50 +86,79 @@ int main(int argc, char *argv[])
 		FREE_MEMORY
 		return ret_var;
 	}
-	int max_threads = atoi(argv[2]);
-	if ((max_threads <= 0) || (max_threads > input_files_count))
+	int max_type_threads = atoi(argv[2]);
+	if ((max_type_threads <= 0) || (max_type_threads > input_files_count))
 	{
-		max_threads = input_files_count;
+		max_type_threads = input_files_count;
 	}
-	printf("Using %d Threads\n", max_threads);
+	printf("Using %d Threads\n", max_type_threads);
 	create_output_directories(base_path);
 
-	threads = (pthread_t *)malloc(max_threads * sizeof(pthread_t));
+	threads = (pthread_t *)malloc(max_type_threads * NUM_THREAD_TYPES * sizeof(pthread_t));
 	watermark = read_png_file(base_path, "watermark.png");
-	if ((NULL == watermark) || (NULL == threads))
-	{
+	if ((NULL == watermark) || (NULL == threads)) {
 		help(ALLOCATION_FAIL, "sdlfkj");
 		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
 		return ret_var;
 	}
 
-	if ((pipe(pipe_w) < 0) || (pipe(pipe_r) < 0) || (pipe(pipe_t) < 0) || (pipe(pipe_threads) < 0))
-	{
+	if ((pipe(pipe_w) < 0) || (pipe(pipe_r) < 0) || (pipe(pipe_t) < 0) || (pipe(pipe_threads_finalizadas) < 0)) {
 		help(ERR_CREATING_PIPE, NULL);
 		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
+
 		return ret_var;
 	}
-	for (int i = 0; i < max_threads; ++i)
+
 	{
-		ThreadParams *thread_data = create_ThreadParams(i, base_path, pipe_r, watermark, pipe_threads);
-		pthread_create(&(threads[i]), NULL, process_image_set_resize, thread_data);
+		// Iniciar as threads, max_type_threads de cada tipo.
+		int thread_num = 0;
+		for (int i = 0; i < max_type_threads; ++i) {
+			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_w, watermark,
+															pipe_threads_finalizadas);
+			pthread_create(&(threads[thread_num]), NULL, process_image_set_watermark, thread_data);
+			++thread_num;
+		}
+		for (int i = 0; i < max_type_threads; ++i) {
+			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_t, watermark,
+															pipe_threads_finalizadas);
+			pthread_create(&(threads[thread_num]), NULL, process_image_set_thumb, thread_data);
+			++thread_num;
+		}
+		for (int i = 0; i < max_type_threads; ++i) {
+			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_r, watermark,
+															pipe_threads_finalizadas);
+			pthread_create(&(threads[thread_num]), NULL, process_image_set_resize, thread_data);
+			++thread_num;
+		}
 	}
-	if (write(pipe_r[1], input_files_names, input_files_count * sizeof(char *)) < 0)
-	{
+	int size_sent = input_files_count * sizeof(char *);
+	if (!((write(pipe_w[1], input_files_names, size_sent) == size_sent) &&
+				(write(pipe_t[1], input_files_names, size_sent) == size_sent) &&
+				(write(pipe_r[1], input_files_names, size_sent) == size_sent))) {
 		help(ERR_USING_PIPE, NULL);
 		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
+
 		return ret_var;
 	}
+	// Fechar os pipes para quando as threads chegarem ao fim deles pipe, o read() não ficar preso e sair porque
+	// encontrou um caracter EOF, colocado lá pelo close().
+	close(pipe_w[1]);
+	close(pipe_t[1]);
 	close(pipe_r[1]);
-	int thread_to_close;
-	for (int i = 0; (i < max_threads) && (sizeof(int) == read(pipe_threads[0], &thread_to_close, sizeof(int))); ++i) {
-		pthread_join(threads[thread_to_close],NULL);
+
+	for (int i = 0; i < max_type_threads * NUM_THREAD_TYPES; ++i) {
+		int thread_to_close;
+		if (sizeof(int) != read(pipe_threads_finalizadas[0], &thread_to_close, sizeof(int))) {
+			break;
+		}
+		pthread_join(threads[thread_to_close], NULL);
 		printf("closed thread: %d \n",thread_to_close);
 	}
-	close(pipe_threads[1]);
+	close(pipe_threads_finalizadas[1]); // Aqui é fechado apenas porque não vai ser mais usado
+
 	stats_csv_path = img_path_generator(base_path, "", "stats.csv");
 	stats_csv_file = fopen(stats_csv_path, "w");
 	freeNew(stats_csv_path);
@@ -155,27 +186,115 @@ int main(int argc, char *argv[])
  *
  * @return NULL
  */
-static void *process_image_set_resize(void *args)
-{
+static void *process_image_set_resize(void *args) {
 	char *filename = NULL;
-	ThreadParams *targs = (ThreadParams *)args;
-	while (read(targs->pipe[0], &filename, sizeof(char *)) == sizeof(char *))
+	ThreadParams *targs = (ThreadParams *) args;
+	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].start));
+	while (sizeof(char *) == read(targs->pipe[0], &filename, sizeof(char *)))
 	{
 		printf("thread %d resize: %s\n", targs->thread_id, filename);
-		gdImagePtr out_image = read_png_file(targs->imgs_path, filename);
-		if (NULL == out_image)
-		{
-			help(ERR_RESIZE, filename);
+		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].start));
+		gdImagePtr image = read_png_file(targs->imgs_path, filename);
+		if (NULL == image) {
+			help(FILE_NOT_FOUND, filename);
+
 			continue;
 		}
-		else
-		{
+
+		gdImagePtr out_image = resize_image(image, 640);
+		if (NULL == out_image) {
+			help(ERR_RESIZE, filename);
+
+			continue;
+		} else {
 			save_image(out_image, targs->imgs_path, RESIZE_DIR, filename);
 			gdImageDestroy(out_image);
 			out_image = NULL;
 		}
+		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].end));
 	}
 	write(targs->ret_pipe[1],&(targs->thread_id),sizeof(int));
-	freeNew(targs);
+	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].end));
+
+	return NULL;
+}
+
+/**
+ * @brief Thread function to do the thumbnail insertion operation.
+ *
+ * @param args a pointer to a struct of type ThreadParams
+ *
+ * @return NULL
+ */
+static void *process_image_set_thumb(void *args) {
+	char *filename = NULL;
+	ThreadParams *targs = (ThreadParams *) args;
+	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].start));
+	while (sizeof(char *) == read(targs->pipe[0], &filename, sizeof(char *)))
+	{
+		printf("thread %d thumbnail: %s\n", targs->thread_id, filename);
+		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].start));
+		gdImagePtr image = read_png_file(targs->imgs_path, filename);
+		if (NULL == image) {
+			help(FILE_NOT_FOUND, filename);
+
+			continue;
+		}
+
+		gdImagePtr out_image = thumb_image(image, 640);
+		if (NULL == out_image) {
+			help(ERR_THUMB, filename);
+
+			continue;
+		} else {
+			save_image(out_image, targs->imgs_path, THUMB_DIR, filename);
+			gdImageDestroy(out_image);
+			out_image = NULL;
+		}
+		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].end));
+	}
+	write(targs->ret_pipe[1],&(targs->thread_id),sizeof(int));
+	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].end));
+
+	return NULL;
+}
+
+/**
+ * @brief Thread function to do the watermark insertion operation.
+ *
+ * @param args a pointer to a struct of type ThreadParams
+ *
+ * @return NULL
+ */
+static void *process_image_set_watermark(void *args) {
+	char *filename = NULL;
+	ThreadParams *targs = (ThreadParams *) args;
+	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].start));
+	while (sizeof(char *) == read(targs->pipe[0], &filename, sizeof(char *)))
+	{
+		printf("thread %d watermark: %s\n", targs->thread_id, filename);
+		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].start));
+		gdImagePtr image = read_png_file(targs->imgs_path, filename);
+		if (NULL == image) {
+			help(FILE_NOT_FOUND, filename);
+
+			continue;
+		}
+
+		gdImagePtr out_image = add_watermark(image, targs->watermark);
+		if (NULL == out_image) {
+			help(ERR_WATER, filename);
+
+			continue;
+		} else {
+			save_image(out_image, targs->imgs_path, WATER_DIR, filename);
+			gdImageDestroy(out_image);
+			out_image = NULL;
+		}
+		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].end));
+	}
+	write(targs->ret_pipe[1],&(targs->thread_id),sizeof(int));
+	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].end));
+
 	return NULL;
 }

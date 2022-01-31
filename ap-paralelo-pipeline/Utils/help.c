@@ -62,9 +62,6 @@ inline void help(int error_id, char *extra_info)
 		case ERR_CREATING_PIPE:
 			fprintf(stderr, "Could not create the pipes successfully\n");
 			break;
-		case ERR_USING_PIPE:
-			fprintf(stderr, "Could not use the pipes successfully, %s \n", extra_info);
-			break;
 		default:
 			fprintf(stderr, "How did we end up here\nMy guess is a programmer made a big oopsie\n ¯\\_(ツ)_/¯\n");
 

@@ -5,8 +5,12 @@
       <file path="$PROJECT_DIR$/ap-paralelo-complexo" />
       <file path="$PROJECT_DIR$/ap-paralelo-dinamico" />
       <file path="$PROJECT_DIR$/ap-paralelo-pipeline" />
+      <file path="$PROJECT_DIR$/ap-paralelo-pipeline-manuel" />
       <file path="$PROJECT_DIR$/ap-paralelo-simples" />
     </sourceRoots>
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/Images" />
+    </excludeRoots>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="MakefileSettings">

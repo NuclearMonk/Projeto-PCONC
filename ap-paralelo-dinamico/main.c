@@ -43,7 +43,6 @@
 		freeNew(input_files_names);                     \
 		freeNew(base_path);                             \
 	}
-
 static void *process_image_set_resize(void *args) __attribute__((nonnull));
 static void *process_image_set_thumb(void *args) __attribute__((nonnull));
 static void *process_image_set_watermark(void *args) __attribute__((nonnull));
@@ -96,14 +95,16 @@ int main(int argc, char *argv[])
 
 	threads = (pthread_t *)malloc(max_type_threads * NUM_THREAD_TYPES * sizeof(pthread_t));
 	watermark = read_png_file(base_path, "watermark.png");
-	if ((NULL == watermark) || (NULL == threads)) {
+	if ((NULL == watermark) || (NULL == threads))
+	{
 		help(ALLOCATION_FAIL, "sdlfkj");
 		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
 		return ret_var;
 	}
 
-	if ((pipe(pipe_w) < 0) || (pipe(pipe_r) < 0) || (pipe(pipe_t) < 0) || (pipe(pipe_threads_finalizadas) < 0)) {
+	if ((pipe(pipe_w) < 0) || (pipe(pipe_r) < 0) || (pipe(pipe_t) < 0) || (pipe(pipe_threads_finalizadas) < 0))
+	{
 		help(ERR_CREATING_PIPE, NULL);
 		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
@@ -114,19 +115,22 @@ int main(int argc, char *argv[])
 	{
 		// Iniciar as threads, max_type_threads de cada tipo.
 		int thread_num = 0;
-		for (int i = 0; i < max_type_threads; ++i) {
+		for (int i = 0; i < max_type_threads; ++i)
+		{
 			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_w, watermark,
 															pipe_threads_finalizadas);
 			pthread_create(&(threads[thread_num]), NULL, process_image_set_watermark, thread_data);
 			++thread_num;
 		}
-		for (int i = 0; i < max_type_threads; ++i) {
+		for (int i = 0; i < max_type_threads; ++i)
+		{
 			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_t, watermark,
 															pipe_threads_finalizadas);
 			pthread_create(&(threads[thread_num]), NULL, process_image_set_thumb, thread_data);
 			++thread_num;
 		}
-		for (int i = 0; i < max_type_threads; ++i) {
+		for (int i = 0; i < max_type_threads; ++i)
+		{
 			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_r, watermark,
 															pipe_threads_finalizadas);
 			pthread_create(&(threads[thread_num]), NULL, process_image_set_resize, thread_data);
@@ -135,8 +139,9 @@ int main(int argc, char *argv[])
 	}
 	int size_sent = input_files_count * sizeof(char *);
 	if (!((write(pipe_w[1], input_files_names, size_sent) == size_sent) &&
-				(write(pipe_t[1], input_files_names, size_sent) == size_sent) &&
-				(write(pipe_r[1], input_files_names, size_sent) == size_sent))) {
+		  (write(pipe_t[1], input_files_names, size_sent) == size_sent) &&
+		  (write(pipe_r[1], input_files_names, size_sent) == size_sent)))
+	{
 		help(ERR_USING_PIPE, NULL);
 		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
@@ -148,17 +153,6 @@ int main(int argc, char *argv[])
 	close(pipe_w[1]);
 	close(pipe_t[1]);
 	close(pipe_r[1]);
-
-	for (int i = 0; i < max_type_threads * NUM_THREAD_TYPES; ++i) {
-		int thread_to_close;
-		if (sizeof(int) != read(pipe_threads_finalizadas[0], &thread_to_close, sizeof(int))) {
-			break;
-		}
-		pthread_join(threads[thread_to_close], NULL);
-		printf("closed thread: %d \n",thread_to_close);
-	}
-	close(pipe_threads_finalizadas[1]); // Aqui é fechado apenas porque não vai ser mais usado
-
 	stats_csv_path = img_path_generator(base_path, "", "stats.csv");
 	stats_csv_file = fopen(stats_csv_path, "w");
 	freeNew(stats_csv_path);
@@ -170,7 +164,20 @@ int main(int argc, char *argv[])
 		FREE_MEMORY
 		return ret_var;
 	}
-	fprintf(stats_csv_file, "\n");
+	for (int i = 0; i < max_type_threads * NUM_THREAD_TYPES; ++i)
+	{
+		int thread_to_close;
+		void *ret_val;
+		if (sizeof(int) != read(pipe_threads_finalizadas[0], &thread_to_close, sizeof(int)))
+		{
+			break;
+		}
+		pthread_join(threads[thread_to_close], &ret_val);
+		fprintf(stats_csv_file, "%s", (char *)ret_val);
+		free(ret_val);
+		printf("closed thread: %d \n", thread_to_close);
+	}
+	close(pipe_threads_finalizadas[1]); // Aqui é fechado apenas porque não vai ser mais usado
 	clock_gettime(CLOCK_REALTIME, &(timer.end));
 	fprintf(stats_csv_file, "Total,%ld.%ld,%ld.%ld\n", timer.start.tv_sec, timer.start.tv_nsec, timer.end.tv_sec,
 			timer.end.tv_nsec);
@@ -186,37 +193,43 @@ int main(int argc, char *argv[])
  *
  * @return NULL
  */
-static void *process_image_set_resize(void *args) {
+static void *process_image_set_resize(void *args)
+{
 	char *filename = NULL;
-	ThreadParams *targs = (ThreadParams *) args;
-	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].start));
+	ThreadParams *targs = (ThreadParams *)args;
+	LOG_START
 	while (sizeof(char *) == read(targs->pipe[0], &filename, sizeof(char *)))
 	{
+		LOG_IMAGE_START
 		printf("thread %d resize: %s\n", targs->thread_id, filename);
-		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].start));
 		gdImagePtr image = read_png_file(targs->imgs_path, filename);
-		if (NULL == image) {
+		if (NULL == image)
+		{
 			help(FILE_NOT_FOUND, filename);
 
 			continue;
 		}
 
 		gdImagePtr out_image = resize_image(image, 640);
-		if (NULL == out_image) {
+		if (NULL == out_image)
+		{
 			help(ERR_RESIZE, filename);
 
 			continue;
-		} else {
+		}
+		else
+		{
+			gdImageDestroy(image);
 			save_image(out_image, targs->imgs_path, RESIZE_DIR, filename);
 			gdImageDestroy(out_image);
 			out_image = NULL;
 		}
-		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].end));
+		LOG_IMAGE("resize")
 	}
-	write(targs->ret_pipe[1],&(targs->thread_id),sizeof(int));
-	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].end));
-
-	return NULL;
+	if(write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int))!=sizeof(int))help(ERR_USING_PIPE,NULL);
+	LOG_THREAD("resize")
+	free(args);
+	return logs;
 }
 
 /**
@@ -226,37 +239,43 @@ static void *process_image_set_resize(void *args) {
  *
  * @return NULL
  */
-static void *process_image_set_thumb(void *args) {
+static void *process_image_set_thumb(void *args)
+{
 	char *filename = NULL;
-	ThreadParams *targs = (ThreadParams *) args;
-	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].start));
+	ThreadParams *targs = (ThreadParams *)args;
+	LOG_START
 	while (sizeof(char *) == read(targs->pipe[0], &filename, sizeof(char *)))
 	{
+		LOG_IMAGE_START
 		printf("thread %d thumbnail: %s\n", targs->thread_id, filename);
-		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].start));
 		gdImagePtr image = read_png_file(targs->imgs_path, filename);
-		if (NULL == image) {
+		if (NULL == image)
+		{
 			help(FILE_NOT_FOUND, filename);
 
 			continue;
 		}
 
 		gdImagePtr out_image = thumb_image(image, 640);
-		if (NULL == out_image) {
+		if (NULL == out_image)
+		{
 			help(ERR_THUMB, filename);
 
 			continue;
-		} else {
+		}
+		else
+		{
+			gdImageDestroy(image);
 			save_image(out_image, targs->imgs_path, THUMB_DIR, filename);
 			gdImageDestroy(out_image);
 			out_image = NULL;
 		}
-		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].end));
+		LOG_IMAGE("thumbnail")
 	}
-	write(targs->ret_pipe[1],&(targs->thread_id),sizeof(int));
-	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].end));
-
-	return NULL;
+	if(write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int))!=sizeof(int))help(ERR_USING_PIPE,NULL);
+	LOG_THREAD("thumbnail")
+	free(args);
+	return logs;
 }
 
 /**
@@ -266,35 +285,41 @@ static void *process_image_set_thumb(void *args) {
  *
  * @return NULL
  */
-static void *process_image_set_watermark(void *args) {
+static void *process_image_set_watermark(void *args)
+{
 	char *filename = NULL;
-	ThreadParams *targs = (ThreadParams *) args;
-	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].start));
+	ThreadParams *targs = (ThreadParams *)args;
+	LOG_START
 	while (sizeof(char *) == read(targs->pipe[0], &filename, sizeof(char *)))
 	{
+		LOG_IMAGE_START
 		printf("thread %d watermark: %s\n", targs->thread_id, filename);
-		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].start));
 		gdImagePtr image = read_png_file(targs->imgs_path, filename);
-		if (NULL == image) {
+		if (NULL == image)
+		{
 			help(FILE_NOT_FOUND, filename);
 
 			continue;
 		}
 
 		gdImagePtr out_image = add_watermark(image, targs->watermark);
-		if (NULL == out_image) {
+		if (NULL == out_image)
+		{
 			help(ERR_WATER, filename);
 
 			continue;
-		} else {
+		}
+		else
+		{
+			gdImageDestroy(image);
 			save_image(out_image, targs->imgs_path, WATER_DIR, filename);
 			gdImageDestroy(out_image);
 			out_image = NULL;
 		}
-		//clock_gettime(CLOCK_REALTIME, &(targs->image_timers[i].end));
+		LOG_IMAGE("watermark")
 	}
-	write(targs->ret_pipe[1],&(targs->thread_id),sizeof(int));
-	//clock_gettime(CLOCK_REALTIME, &(targs->thread_timers[targs->start_index].end));
-
-	return NULL;
+	if(write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int))!=sizeof(int))help(ERR_USING_PIPE,NULL);
+	LOG_THREAD("watermark")
+	free(args);
+	return logs;
 }

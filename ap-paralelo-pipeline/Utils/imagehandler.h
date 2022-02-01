@@ -13,15 +13,16 @@
 #define PROJETO_PCONC_IMAGEHANDLER_H
 
 #include <gd.h>
-#include "stats.h"
 
 typedef struct
 {
-	int thread_id;
+	int thread_index;
 	char *imgs_path;
-	int*pipe;
+	int *pipe_self;
+	int *pipe_next;
 	gdImagePtr watermark;
-	int* ret_pipe;
+	int *ret_pipe;
+	int transf_type;
 } ThreadParams;
 
 /**
@@ -36,7 +37,9 @@ typedef struct
  *
  * @return ThreadParams* the ThreadParams to be passed to the arguments of the thread
  */
-ThreadParams *create_ThreadParams(int thread_id, char *imgs_path, int* pipe, gdImagePtr watermark,int* ret_pipe); // __attribute__((nonnull));
+ThreadParams *
+create_ThreadParams(int thread_id, char *imgs_path, int *pipe_self, int *pipe_next, gdImagePtr watermark, int *ret_pipe,
+					int transf_type); // __attribute__((nonnull));
 
 /**
  * @brief reads a png file to a gdImage

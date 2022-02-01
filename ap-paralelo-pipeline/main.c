@@ -15,14 +15,20 @@
 #include "Utils/filehandler.h"
 #include "Utils/imagehandler.h"
 #include "Utils/general.h"
+#include "Utils/stats.h"
 #include <gd.h>
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
+#include <stdbool.h>
+
 #pragma endregion
 
 #define NUM_THREAD_TYPES 3
+#define TRANSF_TYPE_WATER 0
+#define TRANSF_TYPE_THUMB 1
+#define TRANSF_TYPE_RESIZE 2
 
 #define FREE_MEMORY                                     \
 	{                                                   \
@@ -44,16 +50,12 @@
 		freeNew(base_path);                             \
 	}
 
-static void *process_image_set_resize(void *args) __attribute__((nonnull));
-static void *process_image_set_thumb(void *args) __attribute__((nonnull));
-static void *process_image_set_watermark(void *args) __attribute__((nonnull));
+static void *process_image_set(void *args) __attribute__((nonnull));
 
-int pipe_t[2];
-int pipe_r[2];
-
-int threads_running_each_type[3] = {0, 0, 0};
-pthread_mutex_t mutex_lock;
-int max_threads_each_type = 0;
+// Cada índice é dado pelas constants começadas por TRANSF_TYPE_.
+int images_to_process_each_type[NUM_THREAD_TYPES] = {0};
+// Um mutex para cada tipo de transformação.
+pthread_mutex_t mutex_lock[NUM_THREAD_TYPES];
 
 int main(int argc, char *argv[])
 {
@@ -63,7 +65,6 @@ int main(int argc, char *argv[])
 
 		return EXIT_FAILURE;
 	}
-	int ret_var = EXIT_SUCCESS;
 
 	printf("----- Running ap-paralelo-dinamico -----");
 	/* Things to free/close in the end */
@@ -74,6 +75,8 @@ int main(int argc, char *argv[])
 	char *stats_csv_path = NULL;
 	FILE *stats_csv_file = NULL;
 	int pipe_w[2];
+	int pipe_t[2];
+	int pipe_r[2];
 	int pipe_threads_finalizadas[2];
 	/***********************************/
 
@@ -87,16 +90,19 @@ int main(int argc, char *argv[])
 	if (0 == input_files_count)
 	{
 		help(NO_FILES_FOUND, NULL);
-		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
-		return ret_var;
+
+		return EXIT_FAILURE;
 	}
+	images_to_process_each_type[TRANSF_TYPE_WATER] = input_files_count;
+	images_to_process_each_type[TRANSF_TYPE_THUMB] = input_files_count;
+	images_to_process_each_type[TRANSF_TYPE_RESIZE] = input_files_count;
+
 	int max_type_threads = atoi(argv[2]);
 	if ((max_type_threads <= 0) || (max_type_threads > input_files_count))
 	{
 		max_type_threads = input_files_count;
 	}
-	max_threads_each_type = max_type_threads;
 	printf("Using %d Threads\n", max_type_threads);
 	create_output_directories(base_path);
 
@@ -104,58 +110,48 @@ int main(int argc, char *argv[])
 	watermark = read_png_file(base_path, "watermark.png");
 	if ((NULL == watermark) || (NULL == threads)) {
 		help(ALLOCATION_FAIL, "sdlfkj");
-		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
-		return ret_var;
+
+		return EXIT_FAILURE;
 	}
 
 	if ((pipe(pipe_w) < 0) || (pipe(pipe_r) < 0) || (pipe(pipe_t) < 0) || (pipe(pipe_threads_finalizadas) < 0)) {
 		help(ERR_CREATING_PIPE, NULL);
-		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
 
-		return ret_var;
+		return EXIT_FAILURE;
 	}
 
 	{
 		// Iniciar as threads, max_type_threads de cada tipo.
 		int thread_num = 0;
-		threads_running_each_type[0] = max_type_threads;
-		threads_running_each_type[1] = max_type_threads;
-		threads_running_each_type[2] = max_type_threads;
 		for (int i = 0; i < max_type_threads; ++i) {
-			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_w, watermark,
-															pipe_threads_finalizadas);
-			pthread_create(&(threads[thread_num]), NULL, process_image_set_watermark, thread_data);
+			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_w, pipe_t, watermark,
+															pipe_threads_finalizadas, TRANSF_TYPE_WATER);
+			pthread_create(&(threads[thread_num]), NULL, process_image_set, thread_data);
 			++thread_num;
-		}
-		for (int i = 0; i < max_type_threads; ++i) {
-			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_t, watermark,
-															pipe_threads_finalizadas);
-			pthread_create(&(threads[thread_num]), NULL, process_image_set_thumb, thread_data);
+
+			thread_data = create_ThreadParams(thread_num, base_path, pipe_t, pipe_r, watermark, pipe_threads_finalizadas,
+											  TRANSF_TYPE_THUMB);
+			pthread_create(&(threads[thread_num]), NULL, process_image_set, thread_data);
 			++thread_num;
-		}
-		for (int i = 0; i < max_type_threads; ++i) {
-			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_r, watermark,
-															pipe_threads_finalizadas);
-			pthread_create(&(threads[thread_num]), NULL, process_image_set_resize, thread_data);
+
+			thread_data = create_ThreadParams(thread_num, base_path, pipe_r, NULL, watermark, pipe_threads_finalizadas,
+											  TRANSF_TYPE_RESIZE);
+			pthread_create(&(threads[thread_num]), NULL, process_image_set, thread_data);
 			++thread_num;
 		}
 	}
 	int size_sent = input_files_count * sizeof(char *);
 	if (write(pipe_w[1], input_files_names, size_sent) != size_sent) {
 		help(ERR_USING_PIPE, NULL);
-		ret_var = EXIT_FAILURE;
 		FREE_MEMORY
 
-		return ret_var;
+		return EXIT_FAILURE;
 	}
-	// Fechar os pipes para quando as threads chegarem ao fim deles pipe, o read() não ficar preso e sair porque
-	// encontrou um caracter EOF, colocado lá pelo close().
-	close(pipe_w[1]);
 
-	for (int i = 0; i < max_type_threads * NUM_THREAD_TYPES; ++i) {
-		int thread_to_close;
+	for (int i = 0; i < (max_type_threads * NUM_THREAD_TYPES); ++i) {
+		int thread_to_close = 0;
 		if (sizeof(int) != read(pipe_threads_finalizadas[0], &thread_to_close, sizeof(int))) {
 			break;
 		}
@@ -164,7 +160,9 @@ int main(int argc, char *argv[])
 	}
 	close(pipe_threads_finalizadas[1]); // Aqui é fechado apenas porque não vai ser mais usado
 
-	pthread_mutex_destroy(&mutex_lock);
+	for (int i = 0; i < NUM_THREAD_TYPES; ++i) {
+		pthread_mutex_destroy(&mutex_lock[i]);
+	}
 
 	stats_csv_path = img_path_generator(base_path, "", "stats.csv");
 	stats_csv_file = fopen(stats_csv_path, "w");
@@ -172,10 +170,9 @@ int main(int argc, char *argv[])
 	if (NULL == stats_csv_file)
 	{
 		help(FILE_WRITE_FAIL, "stats.csv");
-		ret_var = EXIT_FAILURE;
 
 		FREE_MEMORY
-		return ret_var;
+		return EXIT_FAILURE;
 	}
 	fprintf(stats_csv_file, "\n");
 	clock_gettime(CLOCK_REALTIME, &(timer.end));
@@ -183,22 +180,35 @@ int main(int argc, char *argv[])
 			timer.end.tv_nsec);
 
 	FREE_MEMORY
-	return ret_var;
+	return EXIT_SUCCESS;
 }
 
 /**
- * @brief Thread function to do the resize operation.
+ * @brief Thread function to do the image operations.
  *
  * @param args a pointer to a struct of type ThreadParams
  *
  * @return NULL
  */
-static void *process_image_set_resize(void *args) {
-	char *filename = NULL;
+static void *process_image_set(void *args) {
 	ThreadParams *targs = (ThreadParams *) args;
-	while (sizeof(char *) == read(pipe_r[0], &filename, sizeof(char *)))
-	{
-		printf("thread %d resize: %s\n", targs->thread_id, filename);
+
+	int transf_type = targs->transf_type;
+
+	char *filename = NULL;
+	while (true) {
+		pthread_mutex_lock(&mutex_lock[transf_type]);
+		if (0 == images_to_process_each_type[transf_type]) {
+			pthread_mutex_unlock(&mutex_lock[transf_type]);
+
+			break;
+		}
+		--images_to_process_each_type[transf_type];
+		pthread_mutex_unlock(&mutex_lock[transf_type]);
+
+		read(targs->pipe_self[0], &filename, sizeof(char *));
+
+		printf("thread %d type %d: %s\n", targs->thread_index, transf_type, filename);
 		gdImagePtr image = read_png_file(targs->imgs_path, filename);
 		if (NULL == image) {
 			help(FILE_NOT_FOUND, filename);
@@ -206,109 +216,44 @@ static void *process_image_set_resize(void *args) {
 			continue;
 		}
 
-		gdImagePtr out_image = resize_image(image, 640);
-		if (NULL == out_image) {
-			help(ERR_RESIZE, filename);
+		gdImagePtr out_image = NULL;
+		if (TRANSF_TYPE_WATER == transf_type) {
+			out_image = add_watermark(image, targs->watermark);
+			if (NULL == out_image) {
+				help(ERR_WATER, filename);
 
-			continue;
+				continue;
+			}
+			save_image(out_image, targs->imgs_path, WATER_DIR, filename);
+		} else if (TRANSF_TYPE_THUMB == transf_type) {
+			out_image = thumb_image(image, 640);
+			if (NULL == out_image) {
+				help(ERR_THUMB, filename);
+
+				continue;
+			}
+			save_image(out_image, targs->imgs_path, THUMB_DIR, filename);
+		} else if (TRANSF_TYPE_RESIZE == transf_type) {
+			out_image = resize_image(image, 640);
+			if (NULL == out_image) {
+				help(ERR_RESIZE, filename);
+
+				continue;
+			}
+			save_image(out_image, targs->imgs_path, RESIZE_DIR, filename);
+		} else {
+			break;
 		}
 
-		save_image(out_image, targs->imgs_path, RESIZE_DIR, filename);
-		gdImageDestroy(out_image);
-		out_image = NULL;
-	}
-	write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int));
-
-	return NULL;
-}
-
-/**
- * @brief Thread function to do the thumbnail insertion operation.
- *
- * @param args a pointer to a struct of type ThreadParams
- *
- * @return NULL
- */
-static void *process_image_set_thumb(void *args) {
-	char *filename = NULL;
-	ThreadParams *targs = (ThreadParams *) args;
-	while (sizeof(char *) == read(pipe_t[0], &filename, sizeof(char *)))
-	{
-		printf("thread %d thumbnail: %s\n", targs->thread_id, filename);
-		gdImagePtr image = read_png_file(targs->imgs_path, filename);
-		if (NULL == image) {
-			help(FILE_NOT_FOUND, filename);
-
-			continue;
-		}
-
-		gdImagePtr out_image = thumb_image(image, 640);
-		if (NULL == out_image) {
-			help(ERR_THUMB, filename);
-
-			continue;
-		}
-
-		save_image(out_image, targs->imgs_path, THUMB_DIR, filename);
 		gdImageDestroy(out_image);
 		out_image = NULL;
 
-		write(pipe_r[1], &filename, sizeof(char *));
-	}
-	pthread_mutex_lock(&mutex_lock);
-	--(threads_running_each_type[1]);
-	if (0 == threads_running_each_type[1]) {
-		close(pipe_r[1]);
-	}
-	pthread_mutex_unlock(&mutex_lock);
-
-	write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int));
-
-	return NULL;
-}
-
-/**
- * @brief Thread function to do the watermark insertion operation.
- *
- * @param args a pointer to a struct of type ThreadParams
- *
- * @return NULL
- */
-static void *process_image_set_watermark(void *args) {
-	char *filename = NULL;
-	ThreadParams *targs = (ThreadParams *) args;
-	while (sizeof(char *) == read(targs->pipe[0], &filename, sizeof(char *)))
-	{
-		printf("thread %d watermark: %s\n", targs->thread_id, filename);
-		gdImagePtr image = read_png_file(targs->imgs_path, filename);
-		if (NULL == image) {
-			help(FILE_NOT_FOUND, filename);
-
-			continue;
+		if (transf_type != TRANSF_TYPE_RESIZE) {
+			write(targs->pipe_next[1], &filename, sizeof(char *));
 		}
-
-		gdImagePtr out_image = add_watermark(image, targs->watermark);
-		if (NULL == out_image) {
-			help(ERR_WATER, filename);
-
-			continue;
-		}
-
-		save_image(out_image, targs->imgs_path, WATER_DIR, filename);
-		gdImageDestroy(out_image);
-		out_image = NULL;
-
-		write(pipe_t[1], &filename, sizeof(char *));
 	}
 
-	pthread_mutex_lock(&mutex_lock);
-	--(threads_running_each_type[0]);
-	if (0 == threads_running_each_type[0]) {
-		close(pipe_t[1]);
-	}
-	pthread_mutex_unlock(&mutex_lock);
-
-	write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int));
+	write(targs->ret_pipe[1], &(targs->thread_index), sizeof(int));
 
 	return NULL;
 }

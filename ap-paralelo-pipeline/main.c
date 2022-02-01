@@ -54,8 +54,12 @@ static void *process_image_set(void *args) __attribute__((nonnull));
 
 // Cada índice é dado pelas constants começadas por TRANSF_TYPE_.
 int images_to_process_each_type[NUM_THREAD_TYPES] = {0};
+int threads_running_resize_type = 0;
 // Um mutex para cada tipo de transformação.
-pthread_mutex_t mutex_lock[NUM_THREAD_TYPES];
+pthread_mutex_t mutex_lock[NUM_THREAD_TYPES] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
+												PTHREAD_MUTEX_INITIALIZER};
+pthread_mutex_t main_mutex_lock;
+pthread_mutexattr_t main_mutex_attr;
 
 int main(int argc, char *argv[])
 {
@@ -79,6 +83,10 @@ int main(int argc, char *argv[])
 	int pipe_r[2];
 	int pipe_threads_finalizadas[2];
 	/***********************************/
+
+	pthread_mutexattr_init(&main_mutex_attr);
+	pthread_mutexattr_settype(&main_mutex_attr, PTHREAD_MUTEX_NORMAL);
+	pthread_mutex_init(&main_mutex_lock, &main_mutex_attr);
 
 	timer_data timer;
 	clock_gettime(CLOCK_REALTIME, &(timer.start));
@@ -124,6 +132,7 @@ int main(int argc, char *argv[])
 
 	{
 		// Iniciar as threads, max_type_threads de cada tipo.
+		threads_running_resize_type = max_type_threads;
 		int thread_num = 0;
 		for (int i = 0; i < max_type_threads; ++i) {
 			ThreadParams *thread_data = create_ThreadParams(thread_num, base_path, pipe_w, pipe_t, watermark,
@@ -150,7 +159,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	for (int i = 0; i < (max_type_threads * NUM_THREAD_TYPES); ++i) {
+	/*for (int i = 0; i < (max_type_threads * NUM_THREAD_TYPES); ++i) {
 		int thread_to_close = 0;
 		if (sizeof(int) != read(pipe_threads_finalizadas[0], &thread_to_close, sizeof(int))) {
 			break;
@@ -158,7 +167,11 @@ int main(int argc, char *argv[])
 		pthread_join(threads[thread_to_close], NULL);
 		printf("closed thread: %d \n",thread_to_close);
 	}
-	close(pipe_threads_finalizadas[1]); // Aqui é fechado apenas porque não vai ser mais usado
+	close(pipe_threads_finalizadas[1]); // Aqui é fechado apenas porque não vai ser mais usado*/
+
+	pthread_mutex_lock(&main_mutex_lock);
+	pthread_mutex_lock(&main_mutex_lock);
+	pthread_mutex_unlock(&main_mutex_lock);
 
 	for (int i = 0; i < NUM_THREAD_TYPES; ++i) {
 		pthread_mutex_destroy(&mutex_lock[i]);
@@ -199,6 +212,13 @@ static void *process_image_set(void *args) {
 	while (true) {
 		pthread_mutex_lock(&mutex_lock[transf_type]);
 		if (0 == images_to_process_each_type[transf_type]) {
+
+			if (TRANSF_TYPE_RESIZE == transf_type) {
+				--threads_running_resize_type;
+				if (0 == threads_running_resize_type) {
+					pthread_mutex_unlock(&main_mutex_lock);
+				}
+			}
 			pthread_mutex_unlock(&mutex_lock[transf_type]);
 
 			break;

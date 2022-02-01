@@ -1,5 +1,5 @@
 CC = gcc
-flags = -std=c99 -g -O3 -funroll-loops -Wall -Wextra -Werror=pedantic -Werror=format=2 -pedantic-errors -Wno-unknown-pragmas
+flags = -std=c11 -g -O3 -funroll-loops -Wall -Wextra -Werror=pedantic -Werror=format=2 -pedantic-errors -Wno-unknown-pragmas -D_XOPEN_SOURCE=500
 libs = -pthread -lgd
 
 pipeline: main.o filehandler.o imagehandler.o help.o

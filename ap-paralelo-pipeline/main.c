@@ -132,21 +132,24 @@ int main(int argc, char *argv[])
 	}
 
 	{
-		// Iniciar as threads, max_type_threads de cada tipo.
-		max_type_threads = 1;
+		// Iniciar as threads, max_type_threads de cada tipo, e iniciá-las como detached. Como não é necessário fazer
+		// join delas, podemos criá-las como detached para não ser preciso fazer join (caso não sejam detached e não
+		// façamos join, vai haver fuga de memória).
 		int thread_num = 0;
 		for (int i = 0; i < max_type_threads; ++i) {
 			pthread_t threads = 0;
 			ThreadParams *thread_data = create_ThreadParams(thread_num, input_files_names, base_path, pipe_w, pipe_t,
 															watermark, TRANSF_TYPE_WATER);
 			pthread_create(&threads, NULL, process_image_set, thread_data);
-			++thread_num;
 			pthread_detach(threads);
+			++thread_num;
+
 			thread_data = create_ThreadParams(thread_num, input_files_names, base_path, pipe_t, pipe_r, NULL,
 											  TRANSF_TYPE_THUMB);
 			pthread_create(&threads, NULL, process_image_set, thread_data);
-			++thread_num;
 			pthread_detach(threads);
+			++thread_num;
+
 			thread_data = create_ThreadParams(thread_num, input_files_names, base_path, pipe_r, NULL, NULL,
 											  TRANSF_TYPE_RESIZE);
 			pthread_create(&threads, NULL, process_image_set, thread_data);

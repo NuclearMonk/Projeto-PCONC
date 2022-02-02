@@ -1,0 +1,16 @@
+
+nc:S5276J"Oimplicit conversion turns floating-point number into integer: 'double' to 'int'(ĞÏí şÿÿÿÿ8úõàâë/
+]c:S845M"?implicit conversion changes signedness: 'int' to 'unsigned int'(å›¶üÿÿÿÿ8üõàâë/
+]c:S845M"?implicit conversion changes signedness: 'int' to 'unsigned int'(å›¶üÿÿÿÿ8ıõàâë/
+nc:S5276a"Oimplicit conversion turns floating-point number into integer: 'double' to 'int'(ĞÏí şÿÿÿÿ8şõàâë/
+ic:S5276f"Oimplicit conversion turns floating-point number into integer: 'double' to 'int'(¥Š…8şõàâë/
+Xc:S845j"?implicit conversion changes signedness: 'int' to 'unsigned int'(”éç8şõàâë/
+Xc:S845j"?implicit conversion changes signedness: 'int' to 'unsigned int'(”éç8şõàâë/
+3c:S9907"Remove this use of "exit".(íÌÔÄ8ùàâë/
+bc:SingleDeclarationPerStatementG"0Define each identifier in a dedicated statement.(ÿ•‚Â8ùàâë/
+Wc:S864J"9Add parentheses to make the operator precedence explicit.(ĞÏí şÿÿÿÿ8ùàâë/
+gc:SingleDeclarationPerStatementX"0Define each identifier in a dedicated statement.(ÉÊææıÿÿÿÿ8ùàâë/
+Wc:S864a"9Add parentheses to make the operator precedence explicit.(ĞÏí şÿÿÿÿ8ùàâë/
+Rc:S864f"9Add parentheses to make the operator precedence explicit.(¥Š…8ùàâë/
+4c:S990‰"Remove this use of "exit".(íÌÔÄ8ùàâë/
+hc:SingleDeclarationPerStatement’"0Define each identifier in a dedicated statement.(“·ñ˜şÿÿÿÿ8‘ùàâë/

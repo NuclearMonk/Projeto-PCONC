@@ -27,7 +27,7 @@ typedef struct TimeData
     logs = realloc(logs, logsize + 512);                                                                                \
     if (logs == NULL)                                                                                                   \
     {                                                                                                                   \
-        free(realoc_holder);                                                                                            \
+        freeNew(realoc_holder);                                                                                            \
         if (write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int)) != sizeof(int))                                 \
             help(ERR_USING_PIPE, NULL);                                                                                 \
     }                                                                                                                   \
@@ -48,7 +48,7 @@ typedef struct TimeData
     }                                                                                                   \
     if (logs == NULL)                                                                                   \
     {                                                                                                   \
-        free(realoc_holder);                                                                            \
+        freeNew(realoc_holder);                                                                            \
         if (write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int)) != sizeof(int))                 \
             help(ERR_USING_PIPE, NULL);                                                                 \
     }                                                                                                   \

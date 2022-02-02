@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 		}
 		pthread_join(threads[thread_to_close], &ret_val);
 		fprintf(stats_csv_file, "%s", (char *)ret_val);
-		free(ret_val);
+		freeNew(ret_val);
 		printf("closed thread: %d \n", thread_to_close);
 	}
 	close(pipe_threads_finalizadas[1]); // Aqui é fechado apenas porque não vai ser mais usado
@@ -227,7 +227,7 @@ static void *process_image_set_resize(void *args)
 	}
 	if(write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int))!=sizeof(int))help(ERR_USING_PIPE,NULL);
 	LOG_THREAD("resize")
-	free(args);
+	freeNew(args);
 	return logs;
 }
 
@@ -273,7 +273,7 @@ static void *process_image_set_thumb(void *args)
 	}
 	if(write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int))!=sizeof(int))help(ERR_USING_PIPE,NULL);
 	LOG_THREAD("thumbnail")
-	free(args);
+	freeNew(args);
 	return logs;
 }
 
@@ -319,6 +319,6 @@ static void *process_image_set_watermark(void *args)
 	}
 	if(write(targs->ret_pipe[1], &(targs->thread_id), sizeof(int))!=sizeof(int))help(ERR_USING_PIPE,NULL);
 	LOG_THREAD("watermark")
-	free(args);
+	freeNew(args);
 	return logs;
 }

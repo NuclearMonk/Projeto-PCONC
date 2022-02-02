@@ -17,6 +17,7 @@
 typedef struct
 {
 	int thread_index;
+	char **imgs_array;
 	char *imgs_path;
 	int *pipe_self;
 	int *pipe_next;
@@ -38,8 +39,8 @@ typedef struct
  * @return ThreadParams* the ThreadParams to be passed to the arguments of the thread
  */
 ThreadParams *
-create_ThreadParams(int thread_id, char *imgs_path, int *pipe_self, int *pipe_next, gdImagePtr watermark, int *ret_pipe,
-					int transf_type); // __attribute__((nonnull));
+create_ThreadParams(int thread_id, char **imgs_array, char *imgs_path, int *pipe_self, int *pipe_next,
+					gdImagePtr watermark, int *ret_pipe, int transf_type); // __attribute__((nonnull));
 
 /**
  * @brief reads a png file to a gdImage
@@ -76,7 +77,7 @@ gdImagePtr thumb_image(gdImagePtr in_img, int size) __attribute__((nonnull));
  *
  * @param image the gdImage to save
  * @param img_final_path the imgs_path to the destination imgs_path
- * @param filename the final filename
+ * @param filename the final img_index
  */
 void save_image(gdImagePtr image, char *img_final_path, char *subdirectory, char *img_name) __attribute__((nonnull));
 

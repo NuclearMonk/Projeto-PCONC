@@ -11,14 +11,17 @@ pipeline:
 	cd ap-paralelo-pipeline && make pipeline
 
 remove-images:
-	cd Images/Small && rm -rf Resize Thumbnail Watermark stats.csv
+	cd dataset1 && rm -rf Resize Thumbnail Watermark stats.csv
+	cd dataset2 && rm -rf Resize Thumbnail Watermark stats.csv
 
 zip-stats:
-	zip stats.zip Images/Small/*.csv
-	cd Images/Small && rm -f *.csv
+	zip stats.zip dataset1/*.csv dataset2/*.csv
+	cd dataset1 && rm -f *.csv
+	cd dataset2 && rm -f *.csv
 
 zip-submissao: remove-images
 	cd ap-paralelo-simples && make clean
 	cd ap-paralelo-complexo && make clean
 	cd ap-paralelo-dinamico && make clean
-	zip -r projeto-pconc ap-paralelo-simples ap-paralelo-complexo ap-paralelo-dinamico Images Makefile README.MD run-teste.py pconcrelatorio-1.pdf
+	cd ap-paralelo-pipeline && make clean
+	zip -r projeto-pconc ap-paralelo-simples ap-paralelo-complexo ap-paralelo-dinamico ap-paralelo-pipeline Images Makefile README.MD run-teste.py pconcrelatorio-1.pdf

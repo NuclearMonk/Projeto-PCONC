@@ -13,7 +13,8 @@ ap-paralelo-pipeline/ap-paralelo-pipeline
 
 # A pasta das imagens
 Images/
-
+dataset1/
+dataset2/
 # Os ficheiros de estatísticas
 *.csv
 

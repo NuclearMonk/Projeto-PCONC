@@ -22,7 +22,6 @@ typedef struct
 	int *pipe_self;
 	int *pipe_next;
 	gdImagePtr watermark;
-	int *ret_pipe;
 	int transf_type;
 } ThreadParams;
 
@@ -40,7 +39,7 @@ typedef struct
  */
 ThreadParams *
 create_ThreadParams(int thread_id, char **imgs_array, char *imgs_path, int *pipe_self, int *pipe_next,
-					gdImagePtr watermark, int *ret_pipe, int transf_type); // __attribute__((nonnull));
+					gdImagePtr watermark, int transf_type); // __attribute__((nonnull));
 
 /**
  * @brief reads a png file to a gdImage

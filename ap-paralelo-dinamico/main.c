@@ -63,7 +63,6 @@ int main(int argc, char *argv[])
 	char **input_files_names = NULL;
 	pthread_t *threads = NULL;
 	gdImagePtr watermark = NULL;
-	char *stats_csv_path = NULL;
 	FILE *stats_csv_file = NULL;
 	int pipe_w[2];
 	int pipe_t[2];
@@ -153,7 +152,7 @@ int main(int argc, char *argv[])
 	close(pipe_w[1]);
 	close(pipe_t[1]);
 	close(pipe_r[1]);
-	stats_csv_path = img_path_generator(base_path, "", "stats.csv");
+	char *stats_csv_path = img_path_generator(base_path, "", "stats.csv");
 	stats_csv_file = fopen(stats_csv_path, "w");
 	freeNew(stats_csv_path);
 	if (NULL == stats_csv_file)

@@ -43,8 +43,9 @@ gdImagePtr read_png_file(char *imgs_path, char *img_name)
 	return read_img;
 }
 
-inline ThreadParams *create_ThreadParams(int thread_id, char **imgs_array, char *imgs_path, int *pipe_self, int *pipe_next,
-					gdImagePtr watermark, int *ret_pipe, int transf_type)
+inline ThreadParams *
+create_ThreadParams(int thread_id, char **imgs_array, char *imgs_path, int *pipe_self, int *pipe_next,
+					gdImagePtr watermark, int transf_type)
 {
 	ThreadParams *targs = (ThreadParams *) malloc(sizeof(ThreadParams));
 	if (NULL == targs)
@@ -59,7 +60,6 @@ inline ThreadParams *create_ThreadParams(int thread_id, char **imgs_array, char 
 	targs->pipe_self = pipe_self;
 	targs->pipe_next = pipe_next;
 	targs->watermark = watermark;
-	targs->ret_pipe = ret_pipe;
 	targs->transf_type = transf_type;
 
 	return targs;
